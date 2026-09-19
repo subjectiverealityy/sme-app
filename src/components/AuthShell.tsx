@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LuCheck } from "react-icons/lu";
 import { Logo } from "@/components/Logo";
 
 export function AuthShell({
@@ -9,8 +10,8 @@ export function AuthShell({
   subtitle,
 }: {
   children: React.ReactNode;
-  title: string;
-  subtitle: string;
+  title: React.ReactNode;
+  subtitle: React.ReactNode;
 }) {
   return (
     <div className="grid min-h-screen md:grid-cols-2">
@@ -26,13 +27,13 @@ export function AuthShell({
       <div className="relative hidden overflow-hidden bg-[#d9f5ed] p-12 text-[#272047] md:flex md:flex-col md:justify-center">
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/60 blur-3xl" />
         <div className="relative max-w-sm">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#29224e] text-2xl text-white">✓</span>
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#29224e] text-white"><LuCheck size={26} strokeWidth={3} /></span>
           <h2 className="mt-6 text-[30px] font-extrabold leading-tight">Know your profit every single day.</h2>
           <p className="mt-2 text-[15px] text-[#0F5132]/70">Simple records for busy shop owners. No accounting jargon, ever.</p>
           <ul className="mt-6 flex flex-col gap-3 text-[14px] font-semibold">
             {["Record sales in 30 seconds", "Scan paper receipts in one tap", "Ask questions, get real numbers"].map((t) => (
               <li key={t} className="flex items-center gap-2.5">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#167C5A] text-[13px] font-bold text-white">✓</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#167C5A] text-white"><LuCheck size={14} strokeWidth={3} /></span>
                 {t}
               </li>
             ))}

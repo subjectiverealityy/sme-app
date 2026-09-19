@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { MoveLeft, MoveRight, PartyPopper } from "lucide-react";
+import { LuMoveLeft, LuMoveRight, LuPartyPopper, LuCircleCheck } from "react-icons/lu";
 import { Badge, Button } from "@/components/ui";
 import { useStore } from "@/lib/store";
 import type { DebtorRow, ReminderLanguage } from "@/lib/collections";
@@ -183,7 +183,7 @@ export default function OwedQueuePage() {
       <div className="flex flex-col items-center px-4 py-10 text-center">
         {total === 0 ? (
           <>
-            <PartyPopper size={40} className="text-ink" />
+            <LuPartyPopper size={40} className="text-ink" />
             <h1 className="mt-3 text-[22px] font-extrabold text-ink">Nothing to chase</h1>
             <p className="mt-1 max-w-[280px] text-[14px] text-gray-600">
               Nobody with a phone number owes you right now. Add a phone number on a debtor&apos;s card to swipe through
@@ -193,7 +193,7 @@ export default function OwedQueuePage() {
           </>
         ) : (
           <>
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-mint-light text-3xl">✅</div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-mint-light text-ink"><LuCircleCheck size={32} /></div>
             <h1 className="mt-3 text-[22px] font-extrabold text-ink">All caught up!</h1>
             <p className="mt-1 text-[14px] text-gray-600">
               {sent} reminder{sent === 1 ? "" : "s"} sent · {skipped} skipped
@@ -299,10 +299,10 @@ export default function OwedQueuePage() {
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <Button variant="outline" onClick={skip} className="!min-h-[52px]">
-                    <MoveLeft size={18} /> Skip
+                    <LuMoveLeft size={18} /> Skip
                   </Button>
                   <Button onClick={openRemind} className="!min-h-[52px]">
-                    <MoveRight size={18} /> Remind
+                    <LuMoveRight size={18} /> Remind
                   </Button>
                 </div>
               </div>
@@ -330,7 +330,7 @@ export default function OwedQueuePage() {
         {confirming?.phone.ok && (
           <div className="flex flex-col gap-3">
             <div className="rounded-xl bg-background px-3 py-2 text-[13px] text-gray-600">
-              ✓ WhatsApp number <b>+{confirming.phone.e164}</b>
+              <LuCircleCheck className="inline" size={16} /> WhatsApp number <b>+{confirming.phone.e164}</b>
             </div>
             <ComposeMessage
               inputs={reminderInputs(confirming)}

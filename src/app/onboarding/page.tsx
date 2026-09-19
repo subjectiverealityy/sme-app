@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LuStore, LuPartyPopper } from "react-icons/lu";
 import { Logo } from "@/components/Logo";
 import { Button, Input, Select, Textarea } from "@/components/ui";
 import { BUSINESS_CATEGORIES } from "@/lib/constants";
@@ -89,7 +90,7 @@ export default function OnboardingPage() {
 
       {step === 0 && (
         <div className="mt-3">
-          <h1 className="text-[24px] font-extrabold text-[#0F5132]">Tell us about your business 🏪</h1>
+          <h1 className="text-[24px] font-extrabold text-[#0F5132]">Tell us about your business <LuStore className="inline" size={22} /></h1>
           <div className="mt-4 flex flex-col gap-4">
             <Input label="Business name" placeholder="e.g. Ada's Fashion Hub" value={name} onChange={(e) => setName(e.target.value)} />
             <Select label="What type of business?" value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -111,7 +112,7 @@ export default function OnboardingPage() {
             <Input label="Business location" placeholder="e.g. Lekki, Lagos" value={location} onChange={(e) => setLocation(e.target.value)} />
             <Textarea label="Short description (optional)" placeholder="What do you sell?" value={desc} onChange={(e) => setDesc(e.target.value)} />
             {err && <p className="rounded-xl bg-red-50 px-4 py-3 text-[14px] text-red-700">{err}</p>}
-            <Button disabled={loading} onClick={finish}>{loading ? "Saving…" : "Finish setup 🎉"}</Button>
+            <Button disabled={loading} onClick={finish}>{loading ? "Saving…" : (<>Finish setup <LuPartyPopper className="inline" size={16} /></>)}</Button>
             <Button variant="ghost" onClick={() => setStep(0)}>Back</Button>
           </div>
         </div>

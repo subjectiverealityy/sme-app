@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Select } from "@/components/ui";
+import { LuCamera, LuSparkles, LuEye, LuCheck } from "react-icons/lu";
 import { useStore } from "@/lib/store";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants";
 import { formatNaira } from "@/lib/utils";
@@ -118,14 +119,14 @@ export default function ScanPage() {
   return (
     <div className="py-4 animate-fade-up">
       <div className="flex items-center justify-between">
-        <h1 className="text-[22px] font-extrabold text-[#0F5132]">Scan a Record 📷</h1>
+        <h1 className="text-[22px] font-extrabold text-[#0F5132]">Scan a Record <LuCamera className="inline" size={20} /></h1>
         <Link href="/scan/history" className="text-[13px] font-bold text-[#167C5A]">History</Link>
       </div>
       <p className="mt-1 text-[14px] text-gray-600">Have paper records? Snap a photo and Credyt will turn them into digital transactions.</p>
 
       {!preview && (
         <Card className="mt-4 border-2 border-dashed !border-[#167C5A]/40 text-center">
-          <p className="text-4xl">📸</p>
+          <p className="text-4xl"><LuCamera size={40} /></p>
           <p className="mt-2 font-bold">Take a photo of your receipt or ledger</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <label className="inline-flex min-h-[48px] cursor-pointer items-center justify-center rounded-xl bg-[#167C5A] px-4 font-bold text-white">
@@ -147,7 +148,7 @@ export default function ScanPage() {
           {!showForm && !processing && (
             <div className="mt-3 grid grid-cols-2 gap-2">
               <Button variant="outline" onClick={() => { setPreview(null); setShowForm(false); }}>Retake</Button>
-              <Button onClick={process}>Read photo ✨</Button>
+              <Button onClick={process}>Read photo <LuSparkles className="inline" size={15} /></Button>
             </div>
           )}
           {processing && (
@@ -167,7 +168,7 @@ export default function ScanPage() {
 
       {showForm && (
         <Card className="mt-3">
-          <h2 className="font-extrabold">Looks correct? 👀</h2>
+          <h2 className="font-extrabold">Looks correct? <LuEye className="inline" size={18} /></h2>
           <p className="text-[13px] text-gray-500">Check and fix anything before saving.</p>
           <div className="mt-3 flex flex-col gap-3">
             <div className="rounded-xl bg-[#F8FAF9] p-3 text-[14px]">
@@ -190,7 +191,7 @@ export default function ScanPage() {
             </Select>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" onClick={() => setShowForm(false)}>Edit details</Button>
-              <Button onClick={save}>Save transaction ✓</Button>
+              <Button onClick={save}>Save transaction <LuCheck className="inline" size={14} /></Button>
             </div>
           </div>
         </Card>

@@ -2,6 +2,7 @@
   "name": "sme-app",
   "version": "0.1.0",
   "private": true,
+  "description": "Credyt — the cash-recovery assistant for Nigerian SMEs. Track who owes you, remind them on WhatsApp, understand their replies, and follow up until the money comes in.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -19,10 +20,10 @@
     "date-fns": "^4.4.0",
     "groq-sdk": "^1.6.0",
     "jspdf": "^4.2.1",
-    "lucide-react": "^1.47.0",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-icons": "^5.7.0",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {

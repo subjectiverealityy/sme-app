@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui";
+import { LuPartyPopper } from "react-icons/lu";
 import { formatNaira } from "@/lib/utils";
 
 function Inner() {
@@ -12,7 +13,7 @@ function Inner() {
   const desc = params.get("desc") || "debtor record";
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center py-8 text-center animate-fade-up">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#DDF5EA] text-3xl">🎉</div>
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#DDF5EA] text-[#0F5132]"><LuPartyPopper size={32} /></div>
       <h1 className="mt-4 text-[24px] font-extrabold text-[#272047]">Debtor saved</h1>
       <p className="mt-1 text-[15px] text-gray-600">
         {decodeURIComponent(desc)} with {formatNaira(amount)} has been added to your debtor records.

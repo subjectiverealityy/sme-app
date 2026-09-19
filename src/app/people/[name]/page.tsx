@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Badge, Button, Card, Input } from "@/components/ui";
+import { LuMessageCircle } from "react-icons/lu";
 import { useStore } from "@/lib/store";
 import {
   getCustomers,
@@ -117,7 +118,7 @@ export default function CustomerDetailPage() {
       <Card className="mt-3">
         {customer.phone ? (
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 text-xl">💬</span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 text-green-700"><LuMessageCircle size={22} /></span>
             <div className="min-w-0 flex-1">
               <p className="font-bold">{customer.phone}</p>
               <button onClick={() => { setPhoneInput(customer.phone!); setEditingPhone(true); }} className="text-[13px] font-semibold text-[#167C5A]">
@@ -155,7 +156,7 @@ export default function CustomerDetailPage() {
             rel="noopener noreferrer"
             className="mt-3 flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 font-bold text-white transition hover:brightness-95"
           >
-            <span className="text-lg">💬</span> Message on WhatsApp
+            <span className="text-lg"><LuMessageCircle size={20} /></span> Message on WhatsApp
           </a>
         )}
         {helloWa && customer.outstanding <= 0 && (
@@ -164,7 +165,7 @@ export default function CustomerDetailPage() {
             rel="noopener noreferrer"
             className="mt-3 flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-[#25D366] px-5 font-bold text-[#128C4B]"
           >
-            <span className="text-lg">💬</span> Say hello on WhatsApp
+            <span className="text-lg"><LuMessageCircle size={20} /></span> Say hello on WhatsApp
           </a>
         )}
       </Card>

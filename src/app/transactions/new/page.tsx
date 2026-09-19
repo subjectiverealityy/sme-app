@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Select, Textarea, Card } from "@/components/ui";
+import { LuCheck } from "react-icons/lu";
 import { PAYMENT_STATUSES, type PaymentStatus } from "@/lib/constants";
 import { useStore } from "@/lib/store";
 import { toISODate } from "@/lib/utils";
@@ -113,7 +114,7 @@ function FormInner() {
           )}
           <Textarea label="Notes (optional)" placeholder="Any extra detail…" value={notes} onChange={(e) => setNotes(e.target.value)} />
           {err && <p className="rounded-xl bg-red-50 px-4 py-3 text-[14px] text-red-700">{err}</p>}
-          <Button disabled={loading}>{loading ? "Saving…" : "Save debtor ✓"}</Button>
+          <Button disabled={loading}>{loading ? "Saving…" : (<>Save debtor <LuCheck className="inline" size={14} /></>)}</Button>
         </form>
       </Card>
     </div>

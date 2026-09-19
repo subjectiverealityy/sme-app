@@ -48,7 +48,7 @@ function Inner() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ledgerly-${preset}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `credyt-${preset}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     setMsg(`CSV downloaded — ${filtered.length} records.`);
@@ -59,7 +59,7 @@ function Inner() {
       const doc = new jsPDF();
       doc.setFontSize(18);
       doc.setTextColor(15, 81, 50);
-      doc.text("Ledgerly Report", 14, 18);
+      doc.text("Credyt Report", 14, 18);
       doc.setFontSize(11);
       doc.setTextColor(60, 60, 60);
       doc.text(`${business?.name ?? "My Business"}`, 14, 26);
@@ -76,7 +76,7 @@ function Inner() {
         doc.text(line, 14, y);
         y += 6;
       });
-      doc.save(`ledgerly-${preset}.pdf`);
+      doc.save(`credyt-${preset}.pdf`);
       setMsg(`PDF downloaded — ${filtered.length} records.`);
     } catch {
       setMsg("PDF export failed. Try CSV instead.");

@@ -3,29 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home,
-  Receipt,
-  ScanLine,
-  HandCoins,
-  Sparkles,
-  Menu,
-  ChevronLeft,
-  ChevronRight,
-  Briefcase,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+  LuHouse,
+  LuReceipt,
+  LuScanLine,
+  LuHandCoins,
+  LuSparkles,
+  LuMenu,
+  LuChevronLeft,
+  LuChevronRight,
+  LuBriefcase,
+  LuTrendingUp,
+  LuUsers,
+} from "react-icons/lu";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 import { Logo } from "@/components/Logo";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 const items = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/transactions", label: "Records", icon: Receipt },
-  { href: "/scan", label: "Scan", icon: ScanLine, fab: true },
-  { href: "/owed", label: "Collect", icon: HandCoins },
-  { href: "/more", label: "More", icon: Menu },
+  { href: "/dashboard", label: "Home", icon: LuHouse },
+  { href: "/transactions", label: "Records", icon: LuReceipt },
+  { href: "/scan", label: "Scan", icon: LuScanLine, fab: true },
+  { href: "/owed", label: "Collect", icon: LuHandCoins },
+  { href: "/more", label: "More", icon: LuMenu },
 ];
 
 export function BottomNav() {
@@ -99,13 +99,13 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 }
 
 const links = [
-  { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/owed", label: "Who owes me", icon: HandCoins },
-  { href: "/transactions", label: "Transactions", icon: Receipt },
-  { href: "/scan", label: "Scan a Record", icon: ScanLine },
-  { href: "/ask", label: "Ask Ledgerly", icon: Sparkles },
-  { href: "/reports", label: "Reports", icon: TrendingUp },
-  { href: "/business", label: "Business", icon: Briefcase },
+  { href: "/dashboard", label: "Home", icon: LuHouse },
+  { href: "/owed", label: "Who owes me", icon: LuHandCoins },
+  { href: "/transactions", label: "Transactions", icon: LuReceipt },
+  { href: "/scan", label: "Scan a Record", icon: LuScanLine },
+  { href: "/ask", label: "Ask Ledgerly", icon: LuSparkles },
+  { href: "/reports", label: "Reports", icon: LuTrendingUp },
+  { href: "/business", label: "Business", icon: LuBriefcase },
 ];
 
 export function Sidebar() {
@@ -131,7 +131,7 @@ export function Sidebar() {
               aria-label="Collapse sidebar"
               className="rounded-lg p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
             >
-              <ChevronLeft size={18} />
+              <LuChevronLeft size={18} />
             </button>
           </>
         ) : (
@@ -140,7 +140,7 @@ export function Sidebar() {
             aria-label="Expand sidebar"
             className="mx-auto rounded-lg p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
           >
-            <ChevronRight size={18} />
+            <LuChevronRight size={18} />
           </button>
         )}
       </div>

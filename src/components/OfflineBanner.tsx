@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { WifiOff, Wifi } from "lucide-react";
+import { LuWifiOff, LuWifi } from "react-icons/lu";
 
 const LS_QUEUE = "credyt_offline_queue";
 
@@ -66,7 +66,7 @@ export function OfflineBanner() {
         {isOnline ? (
           <>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-              <Wifi size={20} />
+              <LuWifi size={20} />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[14px] font-extrabold text-emerald-900">Back online</span>
@@ -78,7 +78,7 @@ export function OfflineBanner() {
         ) : (
           <>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-              <WifiOff size={20} />
+              <LuWifiOff size={20} />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[14px] font-extrabold text-amber-900">You&apos;re offline</span>

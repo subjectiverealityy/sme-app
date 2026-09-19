@@ -46,13 +46,13 @@ interface StoreState {
 
 const Ctx = createContext<StoreState | null>(null);
 
-const LS_USER = "ledgerly_user";
-const LS_BIZ = "ledgerly_business";
-const LS_TXN = "ledgerly_txns";
-const LS_SCAN = "ledgerly_scans";
-const LS_PAYMENTS = "ledgerly_payments";
-const LS_REMINDERS = "ledgerly_reminders";
-const LS_REPLIES = "ledgerly_replies";
+const LS_USER = "credyt_user";
+const LS_BIZ = "credyt_business";
+const LS_TXN = "credyt_txns";
+const LS_SCAN = "credyt_scans";
+const LS_PAYMENTS = "credyt_payments";
+const LS_REMINDERS = "credyt_reminders";
+const LS_REPLIES = "credyt_replies";
 
 function readLS<T>(key: string): T | null {
   try {

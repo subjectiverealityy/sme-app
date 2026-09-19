@@ -1,4 +1,4 @@
--- Ledgerly Supabase schema
+-- Credyt Supabase schema
 -- Run in Supabase SQL editor
 
 -- Profiles (extends auth.users)

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { LuMenu, LuX, LuPlay, LuSparkles, LuZap, LuCamera, LuCheck, LuArrowUp } from "react-icons/lu";
 import { Logo } from "@/components/Logo";
 import { useStore } from "@/lib/store";
 
@@ -87,9 +88,7 @@ function LandingNav({ loggedIn }: { loggedIn: boolean }) {
           aria-label="Toggle menu"
           aria-expanded={open}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-          </svg>
+          {open ? <LuX size={24} /> : <LuMenu size={24} />}
         </button>
       </div>
       {open && (
@@ -117,10 +116,10 @@ function LandingNav({ loggedIn }: { loggedIn: boolean }) {
 
 function Hero({ loggedIn }: { loggedIn: boolean }) {
   return (
-    <section className="relative overflow-hidden bg-[#faf7f2] text-[#272047]">
+    <section className="relative flex min-h-[calc(100svh-4rem)] flex-col overflow-hidden bg-[#faf7f2] text-[#272047]">
       <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[#d9f5ed] blur-3xl" />
       <div className="pointer-events-none absolute -right-24 top-32 h-72 w-72 rounded-full bg-[#fce0d3]/70 blur-3xl" />
-      <div className="relative mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-14 pt-12 sm:px-6 md:grid-cols-2 md:gap-8 md:pt-20 lg:px-8">
+      <div className="relative mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 items-center gap-10 px-4 pb-14 pt-12 sm:px-6 md:grid-cols-2 md:gap-8 md:pt-16 lg:px-8">
         <div className="animate-fade-up">
           <span className="inline-flex items-center gap-2 rounded-full border border-[#11b7ab]/20 bg-[#d9f5ed] px-3 py-1.5 text-[12px] font-bold tracking-wide text-[#272047]">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[#11b7ab]" /> BUILT FOR NIGERIAN SMALL BUSINESSES
@@ -135,8 +134,8 @@ function Hero({ loggedIn }: { loggedIn: boolean }) {
             <Link href={loggedIn ? "/dashboard" : "/signup"} className="rounded-2xl bg-[#29224e] px-6 py-3.5 text-center text-[16px] font-extrabold text-white shadow-lg shadow-[#29224e]/20 transition hover:scale-[1.02] hover:bg-[#3b3267]">
               {loggedIn ? "Continue to dashboard →" : "Create free account →"}
             </Link>
-            <a href="#demo" className="rounded-2xl border border-[#11b7ab]/40 bg-white px-6 py-3.5 text-center text-[16px] font-bold text-[#29224e] transition hover:bg-[#d9f5ed]">
-              ▶ See how it works
+            <a href="#demo" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#11b7ab]/40 bg-white px-6 py-3.5 text-center text-[16px] font-bold text-[#29224e] transition hover:bg-[#d9f5ed]">
+              <LuPlay size={15} /> See how it works
             </a>
           </div>
           <div className="mt-5 flex items-center gap-3 text-[13px] text-gray-500">
@@ -187,7 +186,7 @@ function Hero({ loggedIn }: { loggedIn: boolean }) {
         <div className="flex overflow-hidden">
           <div className="animate-marquee flex shrink-0 gap-8 pr-8 text-[14px] font-bold text-[#0F5132]/80">
             {[...SHOPS, ...SHOPS].map((s, i) => (
-              <span key={i} className="whitespace-nowrap">✦ {s}</span>
+              <span key={i} className="flex items-center gap-1.5 whitespace-nowrap"><LuSparkles size={13} className="text-[#0F5132]/60" />{s}</span>
             ))}
           </div>
         </div>
@@ -229,17 +228,18 @@ function Stats() {
 function FeatureTabs() {
   const [tab, setTab] = useState<"record" | "scan" | "ask">("record");
   const content = {
-    record: { icon: "⚡", title: "Record in seconds", body: "Add a debtor with friendly questions, not ledger codes. Works great one-handed at the shop.", points: ["Name and what they want", "Paid / Credit / Interested tracking", "Money owed at a glance"] },
-    scan: { icon: "📷", title: "Keep records tidy", body: "See everyone in one table, then open a full detail view whenever you need context.", points: ["Search by debtor", "View complete history", "Quick WhatsApp follow-up"] },
-    ask: { icon: "✨", title: "Ask about your business", body: "Chat with your own data. Real figures calculated from your records, explained in plain language.", points: ["How much did I make?", "Where did I spend most?", "Compare this vs last month"] },
+    record: { icon: <LuZap className="text-4xl" />, title: "Record in seconds", body: "Add a debtor with friendly questions, not ledger codes. Works great one-handed at the shop.", points: ["Name and what they want", "Paid / Credit / Interested tracking", "Money owed at a glance"] },
+    scan: { icon: <LuCamera className="text-4xl" />, title: "Keep records tidy", body: "See everyone in one table, then open a full detail view whenever you need context.", points: ["Search by debtor", "View complete history", "Quick WhatsApp follow-up"] },
+    ask: { icon: <LuSparkles className="text-4xl" />, title: "Ask about your business", body: "Chat with your own data. Real figures calculated from your records, explained in plain language.", points: ["How much did I make?", "Where did I spend most?", "Compare this vs last month"] },
   }[tab];
   return (
     <section id="features" className="mx-auto w-full max-w-7xl scroll-mt-20 px-4 py-10 sm:px-6 lg:px-8">
       <h2 className="text-balance text-center text-[26px] font-extrabold tracking-tight text-[#0F5132] sm:text-[30px] md:text-[34px]">Everything, minus the headache</h2>
       <div className="mx-auto mt-5 flex w-full max-w-md gap-1 rounded-2xl bg-white p-1.5 shadow-sm">
         {(["record", "scan", "ask"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 truncate rounded-xl px-2 py-2.5 text-[13px] font-bold transition sm:px-3 sm:text-[14px] ${tab === t ? "bg-[#167C5A] text-white shadow" : "text-gray-500 hover:text-[#0F5132]"}`}>
-            {t === "record" ? "⚡ Record" : t === "scan" ? "📷 Scan" : "✨ Ask AI"}
+          <button key={t} onClick={() => setTab(t)} className={`flex flex-1 items-center justify-center gap-1.5 truncate rounded-xl px-2 py-2.5 text-[13px] font-bold transition sm:px-3 sm:text-[14px] ${tab === t ? "bg-[#167C5A] text-white shadow" : "text-gray-500 hover:text-[#0F5132]"}`}>
+            {t === "record" ? <LuZap size={14} /> : t === "scan" ? <LuCamera size={14} /> : <LuSparkles size={14} />}
+            {t === "record" ? "Record" : t === "scan" ? "Scan" : "Ask AI"}
           </button>
         ))}
       </div>
@@ -250,7 +250,7 @@ function FeatureTabs() {
         <ul className="mt-3 flex flex-col gap-2">
           {content.points.map((p) => (
             <li key={p} className="flex items-center gap-2 rounded-xl bg-[#F8FAF9] px-3 py-2.5 text-[14px] font-medium">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#DDF5EA] text-[13px] font-bold text-[#0F5132]">✓</span>{p}
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#DDF5EA] text-[#0F5132]"><LuCheck size={13} strokeWidth={3} /></span>{p}
             </li>
           ))}
         </ul>
@@ -311,7 +311,7 @@ function AiDemo() {
     <section id="ai" className="mx-auto w-full max-w-7xl scroll-mt-20 px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-6 overflow-hidden rounded-3xl border border-[#11b7ab]/20 bg-white p-6 shadow-sm sm:p-8 md:grid-cols-2 md:gap-8 md:p-10">
         <div>
-          <span className="rounded-full bg-[#d9f5ed] px-3 py-1 text-[12px] font-bold text-[#272047]">✨ ASK CREDYT — LIVE PREVIEW</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#d9f5ed] px-3 py-1 text-[12px] font-bold text-[#272047]"><LuSparkles size={13} /> ASK CREDYT — LIVE PREVIEW</span>
           <h2 className="mt-3 text-balance text-[26px] font-extrabold leading-tight tracking-tight text-[#29224e] sm:text-[30px] md:text-[32px]">Ask in plain English. Get clear answers.</h2>
           <p className="mt-2 text-pretty text-[14px] text-gray-600">Tap a question to see how Credyt answers from actual debtor records — never made-up figures.</p>
           <div className="mt-4 flex flex-col gap-2">
@@ -323,7 +323,7 @@ function AiDemo() {
           </div>
         </div>
         <div className="flex min-h-[220px] flex-col rounded-2xl bg-white p-4 text-[#17221D]">
-          {!active && <p className="m-auto text-center text-[14px] text-gray-400">👆 Tap a question to see the magic</p>}
+          {!active && <p className="m-auto text-center text-[14px] text-gray-400"><LuArrowUp className="inline" size={14} /> Tap a question to see the magic</p>}
           {active && (
             <>
               <p className="max-w-[80%] self-end rounded-2xl bg-[#167C5A] px-4 py-2.5 text-[14px] font-medium text-white">{active}</p>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { LuEye, LuPencil, LuTrash2, LuCircleDot } from "react-icons/lu";
 import { Badge, Button, Card } from "@/components/ui";
 import { useStore } from "@/lib/store";
 import type { Transaction } from "@/lib/constants";
@@ -53,7 +53,7 @@ export function TxnTable({ transactions }: { transactions: Transaction[] }) {
                   <td className="px-4 py-3">
                     <span className="flex items-center gap-2.5">
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d9f5ed] text-[#272047]">
-                        ◌
+                        <LuCircleDot size={16} />
                       </span>
                       <span className="min-w-0">
                         <span className="block truncate font-bold">{t.description}</span>
@@ -76,7 +76,7 @@ export function TxnTable({ transactions }: { transactions: Transaction[] }) {
                         aria-label={`View ${t.description}`}
                         className="rounded-lg p-2 text-gray-500 hover:bg-[#d9f5ed] hover:text-[#272047]"
                       >
-                        <Eye size={17} />
+                        <LuEye size={17} />
                       </Link>
                       <Link
                         href={`/transactions/${t.id}?edit=1`}
@@ -84,7 +84,7 @@ export function TxnTable({ transactions }: { transactions: Transaction[] }) {
                         aria-label={`Edit ${t.description}`}
                         className="rounded-lg p-2 text-gray-500 hover:bg-[#d9f5ed] hover:text-[#272047]"
                       >
-                        <Pencil size={17} />
+                        <LuPencil size={17} />
                       </Link>
                       <button
                         title="Delete"
@@ -92,7 +92,7 @@ export function TxnTable({ transactions }: { transactions: Transaction[] }) {
                         onClick={() => setDelId(t.id)}
                         className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
                       >
-                        <Trash2 size={17} />
+                        <LuTrash2 size={17} />
                       </button>
                     </span>
                   </td>

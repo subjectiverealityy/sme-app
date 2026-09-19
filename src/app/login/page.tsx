@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input } from "@/components/ui";
+import { LuHand } from "react-icons/lu";
 import { AuthShell } from "@/components/AuthShell";
 import { useStore } from "@/lib/store";
 import { getSupabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/client";
@@ -68,7 +69,7 @@ function LoginForm() {
   }
 
   return (
-    <AuthShell title="Welcome back 👋" subtitle="Log in to continue your records.">
+    <AuthShell title={<>Welcome back <LuHand className="inline" size={22} /></>} subtitle="Log in to continue your records.">
       {params.get("checkEmail") && !err && !info && (
         <p className="mb-4 rounded-xl bg-[#DDF5EA] px-4 py-3 text-[14px] text-[#0F5132]">
           ✉️ Account created — <b>check your email for the verification link</b>, then log in here.

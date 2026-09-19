@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { LuRotateCcw, LuX } from "react-icons/lu";
 import { Badge, Button, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { MessageInputs, ReminderLanguage } from "@/lib/collections";
@@ -79,7 +79,7 @@ export function ComposeMessage({
           }}
           className="flex items-center gap-1 self-end text-[13px] font-bold text-[#167C5A]"
         >
-          <RotateCcw size={14} /> Reset to template
+          <LuRotateCcw size={14} /> Reset to template
         </button>
       )}
       <span className="sr-only" data-force={forceReset}>.</span>
@@ -108,7 +108,7 @@ export function Sheet({
         <div className="flex items-center justify-between">
           <h3 className="text-[18px] font-extrabold text-[#0F5132]">{title}</h3>
           <button onClick={onClose} className="rounded-full px-2 py-1 text-gray-400 hover:bg-gray-100" aria-label="Close">
-            ✕
+            <LuX size={16} />
           </button>
         </div>
         <div className="mt-3">{children}</div>

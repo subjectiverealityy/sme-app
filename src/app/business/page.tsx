@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Save, X } from "lucide-react";
+import { LuPencil, LuSave, LuX } from "react-icons/lu";
 import { Button, Card, Input, Select, Textarea } from "@/components/ui";
 import { BUSINESS_CATEGORIES } from "@/lib/constants";
 import { useStore } from "@/lib/store";
@@ -68,7 +68,7 @@ export default function BusinessPage() {
           ? e.message
           : typeof e === "object" && e !== null && "message" in e
             ? String((e as { message: unknown }).message)
-            : "Save failed.";
+            : "LuSave failed.";
       setMsg(m);
     } finally {
       setLoading(false);
@@ -119,7 +119,7 @@ export default function BusinessPage() {
         <Textarea label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         <Input label="Payment account (appears on reminders)" hint="e.g. GTB 0123456789 (Adeola) — optional" value={form.payment_details ?? ""} onChange={(e) => setForm({ ...form, payment_details: e.target.value })} />
         {msg && <p className="rounded-xl bg-[#DDF5EA] px-4 py-2 text-[14px] text-[#0F5132]">{msg}</p>}
-        <Button disabled={loading} onClick={save}>{loading ? "Saving…" : "Save changes"}</Button>
+        <Button disabled={loading} onClick={save}>{loading ? "Saving…" : "LuSave changes"}</Button>
       </Card>
     </div>
   );

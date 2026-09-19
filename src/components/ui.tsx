@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { LuNotebookTabs } from "react-icons/lu";
 
 export function Button({
   children,
@@ -99,7 +100,7 @@ export function Badge({ children, tone = "neutral" }: { children: React.ReactNod
 export function EmptyState({ title, body, action }: { title: string; body: string; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center rounded-2xl bg-white px-6 py-10 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#d9f5ed] text-xl">📒</div>
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#d9f5ed] text-[#0F5132]"><LuNotebookTabs size={24} /></div>
       <h3 className="text-[17px] font-bold text-[#272047]">{title}</h3>
       <p className="mt-1 max-w-[260px] text-[14px] text-gray-600">{body}</p>
       {action && <div className="mt-4 w-full max-w-[260px]">{action}</div>}

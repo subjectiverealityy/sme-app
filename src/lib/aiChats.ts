@@ -16,7 +16,7 @@ export interface ChatSession {
   updatedAt: string;
 }
 
-const LS_PREFIX = "ledgerly_chats_";
+const LS_PREFIX = "credyt_chats_";
 
 function lsKey(owner: string) {
   return `${LS_PREFIX}${owner}`;

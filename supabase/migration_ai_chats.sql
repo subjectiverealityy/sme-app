@@ -1,4 +1,4 @@
--- Ledgerly migration: AI chat history
+-- Credyt migration: AI chat history
 -- Run once in Supabase SQL editor (safe to re-run)
 
 create table if not exists public.ai_chats (

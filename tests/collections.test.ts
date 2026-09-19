@@ -263,14 +263,14 @@ test("extractNairaAmount reads money out of chat text", () => {
   assert.equal(extractNairaAmount("no money"), null);
 });
 test("replyLink builds a short shareable link with context", () => {
-  const link = replyLink("https://app.ledgerly.ng/", "txn_1", {
+  const link = replyLink("https://app.credyt.ng/", "txn_1", {
     business: "Ada's Fashion",
     debtor: "Chidi",
     amount: 20000,
   });
   assert.equal(
     link,
-    "https://app.ledgerly.ng/r/txn_1?name=Ada%27s+Fashion&debtor=Chidi&amount=20000"
+    "https://app.credyt.ng/r/txn_1?name=Ada%27s+Fashion&debtor=Chidi&amount=20000"
   );
 });
 

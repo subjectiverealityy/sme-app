@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign, Menu, MessageCircle, ShieldCheck, UserPlus, Plus, TrendingDown, TrendingUp, ScanLine, Sparkles, Wallet } from "lucide-react";
+import { LuArrowUpRight, LuBell, LuCalendarDays, LuCheck, LuChevronRight, LuCircleDollarSign, LuMenu, LuMessageCircle, LuShieldCheck, LuUserPlus, LuPlus, LuTrendingDown, LuTrendingUp, LuScanLine, LuSparkles, LuWallet, LuReceipt, LuNotebookTabs, LuLightbulb, LuPartyPopper, LuHandCoins, LuChartLine, LuUpload } from "react-icons/lu";
 import { useStore } from "@/lib/store";
 import { EmptyState, Skeleton, Card } from "@/components/ui";
 import { AddFab } from "@/components/AddFab";
@@ -23,7 +23,7 @@ function PageHeader({ name, businessName, action }: { name: string; businessName
           aria-label="Open menu"
           className="hidden rounded-xl border border-gray-200 bg-white p-2.5 text-gray-600 hover:text-ink md:block"
         >
-          <Menu size={20} />
+          <LuMenu size={20} />
         </button>
       )}
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mint text-lg font-extrabold text-primary">
@@ -43,17 +43,17 @@ function PageHeader({ name, businessName, action }: { name: string; businessName
         href="/transactions/new?type=income"
         className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[14px] font-bold text-white shadow-sm transition hover:bg-primary-dark"
       >
-        <Plus size={17} /> <span className="hidden sm:inline">Add</span>
+        <LuPlus size={17} /> <span className="hidden sm:inline">Add</span>
       </Link>
     </div>
   );
 }
 
 const QUICK_ACTIONS = [
-  { href: "/transactions/new?type=income", icon: "💰", label: "Record sale", sub: "Money in", bg: "bg-mint" },
-  { href: "/transactions/new?type=expense", icon: "🧾", label: "Add expense", sub: "Money out", bg: "bg-red-50" },
-  { href: "/scan", icon: "📷", label: "Scan record", sub: "Digitize paper", bg: "bg-amber-50" },
-  { href: "/ask", icon: "✨", label: "Ask AI", sub: "Insights", bg: "bg-violet-50" },
+  { href: "/transactions/new?type=income", icon: <LuCircleDollarSign size={22} />, label: "Record sale", sub: "Money in", bg: "bg-mint" },
+  { href: "/transactions/new?type=expense", icon: <LuReceipt size={22} />, label: "Add expense", sub: "Money out", bg: "bg-red-50" },
+  { href: "/scan", icon: <LuScanLine size={22} />, label: "Scan record", sub: "Digitize paper", bg: "bg-amber-50" },
+  { href: "/ask", icon: <LuSparkles size={22} />, label: "Ask AI", sub: "Insights", bg: "bg-violet-50" },
 ];
 
 export default function DashboardPage() {
@@ -107,7 +107,7 @@ export default function DashboardPage() {
         {/* Hero empty state */}
         <div className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#2D2445] to-[#443A5C] p-6 text-center text-white md:p-8">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-3xl">📒</div>
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/15"><LuNotebookTabs size={28} /></div>
           <h2 className="mt-3 text-[20px] font-extrabold md:text-[24px]">Your business story starts here.</h2>
           <p className="mx-auto mt-1 max-w-[300px] text-[14px] text-white/80">
             Record your first sale or expense and watch your profit appear.
@@ -137,7 +137,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-3 rounded-2xl bg-mint-light px-4 py-3 text-[13px] text-ink">
-          💡 <b>Tip:</b> most owners start by recording today&apos;s sales — it takes about 30 seconds.
+          <LuLightbulb className="inline" size={15} /> <b>Tip:</b> most owners start by recording today&apos;s sales — it takes about 30 seconds.
         </div>
       </div>
     );
@@ -150,19 +150,19 @@ export default function DashboardPage() {
       {/* Summary cards */}
       <div className="mt-4 grid grid-cols-3 gap-2">
         <Card className="border border-primary/10 bg-mint !p-3 md:!p-4">
-          <p className="flex items-center gap-1 text-[12px] font-bold text-ink"><TrendingUp size={13} /> Money In</p>
+          <p className="flex items-center gap-1 text-[12px] font-bold text-ink"><LuTrendingUp size={13} /> Money In</p>
           <p className="mt-1 text-[17px] font-extrabold text-ink md:text-[22px]">{formatNaira(summary.moneyIn)}</p>
           <p className="text-[11px] text-ink/60">{summary.countIn} sale{summary.countIn === 1 ? "" : "s"}</p>
         </Card>
         <Card className="!p-3 md:!p-4">
-          <p className="flex items-center gap-1 text-[12px] font-bold text-gray-500"><TrendingDown size={13} /> Money Out</p>
+          <p className="flex items-center gap-1 text-[12px] font-bold text-gray-500"><LuTrendingDown size={13} /> Money Out</p>
           <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(summary.moneyOut)}</p>
           <p className="text-[11px] text-gray-400">{summary.countOut} expense{summary.countOut === 1 ? "" : "s"}</p>
         </Card>
         <Card className={`!p-3 md:!p-4 ${summary.profit >= 0 ? "bg-primary text-white" : "bg-red-600 text-white"}`}>
-          <p className="flex items-center gap-1 text-[12px] font-bold opacity-80"><Wallet size={13} /> Profit</p>
+          <p className="flex items-center gap-1 text-[12px] font-bold opacity-80"><LuWallet size={13} /> Profit</p>
           <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(summary.profit)}</p>
-          <p className="text-[11px] opacity-70">{summary.profit >= 0 ? "🎉 you're growing" : "watch spending"}</p>
+          <p className="text-[11px] opacity-70">{summary.profit >= 0 ? (<><LuPartyPopper className="inline" size={13} /> you're growing</>) : "watch spending"}</p>
         </Card>
       </div>
 
@@ -170,7 +170,7 @@ export default function DashboardPage() {
         <Link href="/owed/queue">
           <div className="mt-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] transition hover:shadow-sm">
             <p className="font-bold text-[#B91C1C]">
-              🔔 {broken.length === 1 ? "1 promise broke" : `${broken.length} promises broke`}
+              <LuBell className="inline" size={14} /> {broken.length === 1 ? "1 promise broke" : `${broken.length} promises broke`}
             </p>
             <p className="mt-0.5 text-[13px] text-gray-700">
               {broken.slice(0, 2).map((b) => `${b.debtorName} (${formatNaira(b.balance)}, said ${longDate(b.promisedDate)})`).join(" · ")}
@@ -187,7 +187,7 @@ export default function DashboardPage() {
       {summary.owedToYou > 0 && (
         <Link href="/owed">
           <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-[14px] transition hover:shadow-sm">
-            💛 <b>Money you&apos;re owed:</b> {formatNaira(summary.owedToYou)} <span className="font-bold text-ink">→ send reminders</span>
+            <LuHandCoins className="inline" size={16} /> <b>Money you&apos;re owed:</b> {formatNaira(summary.owedToYou)} <span className="font-bold text-ink">→ send reminders</span>
           </div>
         </Link>
       )}
@@ -195,10 +195,10 @@ export default function DashboardPage() {
       {/* Quick actions */}
       <div className="mt-3 grid grid-cols-4 gap-2">
         {[
-          { href: "/transactions/new?type=income", icon: <Plus size={18} />, label: "Income" },
-          { href: "/transactions/new?type=expense", icon: <TrendingDown size={18} />, label: "Expense" },
-          { href: "/scan", icon: <ScanLine size={18} />, label: "Scan" },
-          { href: "/ask", icon: <Sparkles size={18} />, label: "Ask AI" },
+          { href: "/transactions/new?type=income", icon: <LuPlus size={18} />, label: "Income" },
+          { href: "/transactions/new?type=expense", icon: <LuTrendingDown size={18} />, label: "Expense" },
+          { href: "/scan", icon: <LuScanLine size={18} />, label: "Scan" },
+          { href: "/ask", icon: <LuSparkles size={18} />, label: "Ask AI" },
         ].map((a) => (
           <Link key={a.label} href={a.href} className="flex flex-col items-center gap-1 rounded-2xl bg-white py-3 text-ink shadow-sm transition hover:bg-mint-light">
             {a.icon}
@@ -245,10 +245,10 @@ export default function DashboardPage() {
               <p className="text-[14px]">Owed to you <b className="text-amber-600">{formatNaira(summary.owedToYou)}</b></p>
             </div>
             <Link href="/reports" className="rounded-2xl bg-mint-light p-3.5 text-[14px] font-bold text-ink transition hover:shadow-sm">
-              📊 View full reports →
+              <LuChartLine className="inline" size={16} /> View full reports →
             </Link>
             <Link href="/export" className="rounded-2xl border border-gray-200 p-3.5 text-[14px] font-bold transition hover:shadow-sm">
-              📤 Export CSV / PDF →
+              <LuUpload className="inline" size={16} /> Export CSV / PDF →
             </Link>
           </div>
         </div>
@@ -265,7 +265,7 @@ export default function DashboardPage() {
               <Link key={t.id} href={`/transactions/${t.id}`}>
                 <Card className="flex items-center gap-3 !p-3 transition hover:shadow-md">
                   <span className={`flex h-10 w-10 items-center justify-center rounded-full ${t.type === "income" ? "bg-mint-light" : "bg-red-50"}`}>
-                    {t.type === "income" ? "💰" : "🧾"}
+                    {t.type === "income" ? <LuCircleDollarSign size={20} /> : <LuReceipt size={20} />}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[14px] font-bold">{t.description}</span>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
           <div className="mt-2 flex flex-col gap-2">
             <Link href="/owed">
               <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-xl">💛</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-[#b6533a]"><LuHandCoins size={22} /></span>
                 <span>
                   <span className="block text-[14px] font-bold">Who owes me</span>
                   <span className="block text-[12px] text-gray-500">Send WhatsApp reminders</span>
@@ -293,7 +293,7 @@ export default function DashboardPage() {
             </Link>
             <Link href="/scan">
               <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-xl">📷</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50"><LuScanLine size={22} /></span>
                 <span>
                   <span className="block text-[14px] font-bold">Digitize paper records</span>
                   <span className="block text-[12px] text-gray-500">Snap a receipt, Credyt reads it</span>
@@ -302,7 +302,7 @@ export default function DashboardPage() {
             </Link>
             <Link href="/ask">
               <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-xl">✨</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50"><LuSparkles size={22} /></span>
                 <span>
                   <span className="block text-[14px] font-bold">Ask about your business</span>
                   <span className="block text-[12px] text-gray-500">“Where did I spend most?”</span>
@@ -311,7 +311,7 @@ export default function DashboardPage() {
             </Link>
             <Link href="/reports">
               <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-mint-light text-xl">📊</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-mint-light text-[#0F5132]"><LuChartLine size={22} /></span>
                 <span>
                   <span className="block text-[14px] font-bold">See your reports</span>
                   <span className="block text-[12px] text-gray-500">Income, expenses & profit</span>
@@ -327,6 +327,6 @@ export default function DashboardPage() {
 }
 
 function MetricCard({ label, value, detail, tone, icon }: { label: string; value: string; detail: string; tone: "navy" | "mint" | "coral"; icon: React.ReactNode }) { const styles = { navy: "bg-[#29224e] text-white", mint: "bg-[#70d7c0] text-[#272047]", coral: "bg-[#f69a72] text-[#272047]" }; return <div className={`rounded-2xl p-4 ${styles[tone]}`}><div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.12em] opacity-75"><span>{label}</span>{icon}</div><p className="mt-3 text-[22px] font-extrabold tracking-tight">{value}</p><p className="mt-1 text-[10px] opacity-70">{detail}</p></div>; }
-function SectionHeading({ icon, title, subtitle, href }: { icon: React.ReactNode; title: string; subtitle: string; href: string }) { return <div className="flex items-start justify-between"><div><h2 className="flex items-center gap-2 text-[14px] font-extrabold">{title}<span className="text-[#8e8994]">{icon}</span></h2><p className="mt-1 text-[11px] text-[#8e8994]">{subtitle}</p></div><Link href={href} aria-label={`View ${title}`} className="text-[#8e8994] transition hover:text-[#272047]"><ChevronRight size={16} /></Link></div>; }
-function CaughtUp() { return <div className="flex min-h-[142px] flex-col items-center justify-center text-center"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#70d7c0] text-[#272047]"><Check size={17} /></span><p className="mt-3 text-[12px] font-extrabold">You are all caught up</p><p className="mt-1 max-w-[220px] text-[11px] leading-5 text-[#8e8994]">New promises will appear here on the day they are due.</p></div>; }
-function EmptyDebtorState() { return <div className="mt-6 rounded-2xl border border-[#e9e3da] bg-white p-8 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#70d7c0] text-[#272047]"><ShieldCheck size={23} /></div><h2 className="mt-3 text-[18px] font-extrabold text-[#272047]">Your debtor list starts here.</h2><p className="mx-auto mt-1 max-w-[300px] text-[12px] leading-5 text-[#8e8994]">Add a debtor to keep every balance, status, and promise visible.</p><Link href="/transactions/new" className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#29224e] px-5 py-3 text-[13px] font-bold text-white transition hover:bg-[#3b3267]">Add your first debtor <ChevronRight size={15} /></Link></div>; }
+function SectionHeading({ icon, title, subtitle, href }: { icon: React.ReactNode; title: string; subtitle: string; href: string }) { return <div className="flex items-start justify-between"><div><h2 className="flex items-center gap-2 text-[14px] font-extrabold">{title}<span className="text-[#8e8994]">{icon}</span></h2><p className="mt-1 text-[11px] text-[#8e8994]">{subtitle}</p></div><Link href={href} aria-label={`View ${title}`} className="text-[#8e8994] transition hover:text-[#272047]"><LuChevronRight size={16} /></Link></div>; }
+function CaughtUp() { return <div className="flex min-h-[142px] flex-col items-center justify-center text-center"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#70d7c0] text-[#272047]"><LuCheck size={17} /></span><p className="mt-3 text-[12px] font-extrabold">You are all caught up</p><p className="mt-1 max-w-[220px] text-[11px] leading-5 text-[#8e8994]">New promises will appear here on the day they are due.</p></div>; }
+function EmptyDebtorState() { return <div className="mt-6 rounded-2xl border border-[#e9e3da] bg-white p-8 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#70d7c0] text-[#272047]"><LuShieldCheck size={23} /></div><h2 className="mt-3 text-[18px] font-extrabold text-[#272047]">Your debtor list starts here.</h2><p className="mx-auto mt-1 max-w-[300px] text-[12px] leading-5 text-[#8e8994]">Add a debtor to keep every balance, status, and promise visible.</p><Link href="/transactions/new" className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#29224e] px-5 py-3 text-[13px] font-bold text-white transition hover:bg-[#3b3267]">Add your first debtor <LuChevronRight size={15} /></Link></div>; }

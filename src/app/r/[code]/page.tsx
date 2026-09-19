@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { LuCircleCheck, LuCheck } from "react-icons/lu";
 import { Button } from "@/components/ui";
 import { naira, parseReplyLocal } from "@/lib/collections";
 import type { DebtReply } from "@/lib/constants";
@@ -94,7 +94,7 @@ export default function ReplyLinkPage() {
 
         {done ? (
           <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
-            <CheckCircle2 size={40} className="mx-auto text-[#167C5A]" />
+            <LuCircleCheck size={40} className="mx-auto text-[#167C5A]" />
             <h2 className="mt-3 text-[18px] font-extrabold text-[#0F5132]">Thanks — reply received</h2>
             <p className="mt-1 text-[14px] text-gray-600">
               {businessName ? `${businessName} ` : "The business "}
@@ -105,7 +105,7 @@ export default function ReplyLinkPage() {
               <p className="mt-0.5">{buildText()}</p>
             </div>
             <Button className="mt-4 w-full" onClick={copyForBusiness}>
-              {copied ? "Copied ✓" : "Copy my reply"}
+              {copied ? (<>Copied <LuCheck className="inline" size={14} /></>) : "Copy my reply"}
             </Button>
             <p className="mt-3 text-[12px] text-gray-400">
               Need more time? Just tap this link again to update your answer.

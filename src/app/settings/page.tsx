@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Card } from "@/components/ui";
+import { LuSettings } from "react-icons/lu";
 import { useStore } from "@/lib/store";
 import { Logo } from "@/components/Logo";
 
@@ -18,7 +19,7 @@ export default function SettingsPage() {
   return (
     <div className="py-4 animate-fade-up">
       <Logo />
-      <h1 className="mt-4 text-[22px] font-extrabold text-[#0F5132]">Settings ⚙️</h1>
+      <h1 className="mt-4 text-[22px] font-extrabold text-[#0F5132]">Settings <LuSettings className="inline" size={22} /></h1>
       <Card className="mt-3">
         <p className="text-[13px] text-gray-500">ACCOUNT</p>
         <p className="mt-1 font-bold">{user?.name ?? "Guest"}</p>

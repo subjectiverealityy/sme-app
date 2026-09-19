@@ -1,4 +1,4 @@
-# Ledgerly — Product Overview
+# Credyt — Product Overview
 
 > Simple records. Smarter business.
 > Mobile-first bookkeeping for Nigerian micro & small businesses.
@@ -7,7 +7,7 @@
 
 ## 1. What the app is
 
-Ledgerly is a plain-language bookkeeping app built for Nigerian micro and small
+Credyt is a plain-language bookkeeping app built for Nigerian micro and small
 businesses (MSMEs). It replaces the paper ledger, the head-counting, and the
 "who hasn't paid me yet" guesswork.
 
@@ -24,7 +24,7 @@ businesses (MSMEs). It replaces the paper ledger, the head-counting, and the
 
 ## 2. Who it serves (ideal customer)
 
-| Segment | Example | Why Ledgerly fits |
+| Segment | Example | Why Credyt fits |
 |---|---|---|
 | Market traders & small shops | Balogun market trader, neighbourhood kiosk | Cash-heavy, sells on credit, currently uses a jotter |
 | Fashion & tailoring | Ankara / aso-ebi designer (Ada's Fashion Hub) | Big-ticket custom orders, prepayment vs credit, fabric stock |
@@ -109,6 +109,6 @@ Built to attack the target user's real pains — listed in build priority.
 
 ## 5. Outcome
 
-This set of features turns Ledgerly from "a notebook for your money" into a
+This set of features turns Credyt from "a notebook for your money" into a
 **money-collector, an adviser, and a path to capital** — exactly the three
 things a Nigerian micro-business owner wants but can't get from a paper ledger.

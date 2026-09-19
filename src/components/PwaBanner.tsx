@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, X } from "lucide-react";
+import { LuDownload, LuX, LuNotebookTabs } from "react-icons/lu";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -68,8 +68,8 @@ export function PwaBanner() {
       className="fixed inset-x-3 bottom-[calc(84px+env(safe-area-inset-bottom))] z-50 md:inset-x-auto md:bottom-6 md:right-6 md:w-[340px]"
     >
       <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-white p-3.5 shadow-xl shadow-black/5">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-lg">
-          📒
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-[#272047]">
+          <LuNotebookTabs size={22} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[14px] font-extrabold text-ink">Install Credyt</span>
@@ -79,14 +79,14 @@ export function PwaBanner() {
           onClick={install}
           className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-[13px] font-bold text-white transition hover:bg-primary-dark"
         >
-          <Download size={15} /> Install
+          <LuDownload size={15} /> Install
         </button>
         <button
           onClick={() => setDismissed(true)}
           aria-label="Dismiss"
           className="shrink-0 rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
         >
-          <X size={16} />
+          <LuX size={16} />
         </button>
       </div>
     </div>

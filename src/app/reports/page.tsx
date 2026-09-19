@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store";
 import { Card } from "@/components/ui";
+import { LuChartLine } from "react-icons/lu";
 import { getDateRange, formatNaira } from "@/lib/utils";
 import { groupByCategory } from "@/lib/finance";
 
@@ -31,7 +32,7 @@ export default function ReportsPage() {
 
   return (
     <div className="py-4 animate-fade-up">
-      <h1 className="text-[22px] font-extrabold text-[#0F5132]">Reports 📊</h1>
+      <h1 className="text-[22px] font-extrabold text-[#0F5132]">Reports <LuChartLine className="inline" size={20} /></h1>
       <p className="text-[13px] text-gray-500">Simple summaries — no accounting jargon.</p>
 
       <div className="mt-3 flex gap-2 overflow-x-auto pb-1 text-[13px] font-bold">

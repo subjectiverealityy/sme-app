@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Menu, Plus, Trash2, X, MessageCircle } from "lucide-react";
+import { LuMenu, LuPlus, LuTrash2, LuX, LuMessageCircle, LuSparkles, LuArrowUp, LuCheck } from "react-icons/lu";
 import { Button, Card } from "@/components/ui";
 import { SUGGESTED_QUESTIONS } from "@/lib/constants";
 import { useStore } from "@/lib/store";
@@ -154,14 +154,14 @@ export default function AskPage() {
         onClick={startNew}
         className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-[#167C5A] px-4 font-bold text-white transition hover:bg-[#0F5132]"
       >
-        <Plus size={18} /> New chat
+        <LuPlus size={18} /> New chat
       </button>
       <p className="mt-4 px-1 text-[12px] font-bold uppercase tracking-wide text-gray-400">History</p>
       <div className="nice-scroll mt-1 flex flex-1 flex-col gap-1.5 overflow-y-auto pb-2">
         {!loaded && <p className="px-2 py-3 text-[13px] text-gray-400">Loading chats…</p>}
         {loaded && sessions.length === 0 && (
           <p className="rounded-xl border border-dashed border-gray-200 bg-white px-3 py-4 text-center text-[13px] text-gray-500">
-            No saved chats yet.<br />Start a new one above 👆
+            No saved chats yet.<br />Start a new one above <LuArrowUp className="inline" size={14} />
           </p>
         )}
         {sessions.map((s) => (
@@ -175,7 +175,7 @@ export default function AskPage() {
             )}
             onClick={() => pick(s.id)}
           >
-            <MessageCircle size={16} className="shrink-0 text-[#167C5A]" />
+            <LuMessageCircle size={16} className="shrink-0 text-[#167C5A]" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[14px] font-bold">{s.title}</span>
               <span className="block text-[11px] text-gray-500">
@@ -188,7 +188,7 @@ export default function AskPage() {
               aria-label={`Delete ${s.title}`}
               className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-600 md:opacity-0 md:group-hover:opacity-100"
             >
-              <Trash2 size={15} />
+              <LuTrash2 size={15} />
             </button>
           </div>
         ))}
@@ -204,10 +204,10 @@ export default function AskPage() {
           aria-label="Open chat history"
           className="rounded-xl border border-gray-200 bg-white p-2.5 md:hidden"
         >
-          <Menu size={19} />
+          <LuMenu size={19} />
         </button>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[22px] font-extrabold text-[#29224e]">Ask Credyt ✨</h1>
+          <h1 className="truncate text-[22px] font-extrabold text-[#29224e]">Ask Credyt <LuSparkles className="inline" size={18} /></h1>
           <p className="truncate text-[13px] text-gray-500">
             {active ? active.title : "Ask questions about your business."}
           </p>
@@ -218,7 +218,7 @@ export default function AskPage() {
           title="New chat"
           className="rounded-xl bg-[#167C5A] p-2.5 text-white md:hidden"
         >
-          <Plus size={19} />
+          <LuPlus size={19} />
         </button>
       </div>
 
@@ -226,7 +226,7 @@ export default function AskPage() {
         {/* Desktop history pane — tinted with a hard right border */}
         <aside className="hidden border-r-2 border-[#167C5A]/15 bg-[#F8FAF9] p-4 md:block">
           <p className="mb-3 flex items-center gap-2 px-1 text-[12px] font-bold uppercase tracking-wide text-[#0F5132]">
-            <MessageCircle size={14} /> Your chats
+            <LuMessageCircle size={14} /> Your chats
           </p>
           {historyPanel}
         </aside>
@@ -316,7 +316,7 @@ export default function AskPage() {
                     disabled={saving}
                     className="min-h-[44px] rounded-xl bg-[#167C5A] px-4 text-[14px] font-bold text-white disabled:opacity-60"
                   >
-                    {saving ? "Saving…" : "Save ✓"}
+                    {saving ? "Saving…" : (<>Save <LuCheck className="inline" size={14} /></>)}
                   </button>
                 </div>
                 {saveError && <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-[12px] text-red-700">{saveError}</p>}
@@ -348,7 +348,7 @@ export default function AskPage() {
             <div className="mb-3 flex items-center justify-between">
               <p className="font-extrabold text-[#0F5132]">Chats</p>
               <button onClick={() => setDrawer(false)} aria-label="Close history" className="rounded-lg p-2 hover:bg-gray-200">
-                <X size={18} />
+                <LuX size={18} />
               </button>
             </div>
             {historyPanel}

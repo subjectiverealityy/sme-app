@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowRight, CircleDollarSign, MessageSquareText, Plus, Users } from "lucide-react";
+import { LuArrowRight, LuCircleDollarSign, LuMessageSquareText, LuPlus, LuUsers } from "react-icons/lu";
 import { Badge, Card, Skeleton } from "@/components/ui";
 import { useStore } from "@/lib/store";
 import { buildDebtReport, totalOwedAll, naira, ageLabel } from "@/lib/collections";
@@ -32,7 +32,7 @@ export default function OwedPage() {
   return (
     <div className="py-4 animate-fade-up">
       <div className="flex items-center gap-2">
-        <CircleDollarSign size={20} className="text-[#167C5A]" />
+        <LuCircleDollarSign size={20} className="text-[#167C5A]" />
         <h1 className="text-[22px] font-extrabold text-[#0F5132]">Who owes me</h1>
       </div>
       <p className="mt-0.5 text-[13px] text-gray-500">
@@ -52,14 +52,14 @@ export default function OwedPage() {
               href="/owed/queue"
               className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-bold text-[#0F5132] transition hover:scale-[1.01]"
             >
-              <MessageSquareText size={18} /> Send reminders · swipe mode
+              <LuMessageSquareText size={18} /> Send reminders · swipe mode
             </Link>
           )}
           <Link
             href="/transactions/new?type=income"
             className="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-white/10 px-5 py-2.5 text-[14px] font-bold text-white transition hover:bg-white/20"
           >
-            <Plus size={16} /> Record a sale on credit
+            <LuPlus size={16} /> Record a sale on credit
           </Link>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function OwedPage() {
         <div className="mt-4">
           <Card className="flex flex-col items-center px-6 py-10 text-center">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#DDF5EA] text-xl">
-              <Users size={22} className="text-[#167C5A]" />
+              <LuUsers size={22} className="text-[#167C5A]" />
             </div>
             <h3 className="font-extrabold text-[#0F5132]">No one owes you right now</h3>
             <p className="mt-1 max-w-[280px] text-[14px] text-gray-600">
@@ -117,7 +117,7 @@ export default function OwedPage() {
                   ) : (
                     <Badge tone="neutral">no phone</Badge>
                   )}
-                  <span className="text-gray-300"><ArrowRight size={18} /></span>
+                  <span className="text-gray-300"><LuArrowRight size={18} /></span>
                 </span>
               </Card>
             </Link>

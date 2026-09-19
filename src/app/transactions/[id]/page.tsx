@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card, Input, Select, Textarea } from "@/components/ui";
+import { LuCamera, LuPencil } from "react-icons/lu";
 import { useStore } from "@/lib/store";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, type Transaction } from "@/lib/constants";
 import { formatDate, formatNaira } from "@/lib/utils";
@@ -75,16 +76,16 @@ function DetailInner() {
             {formatNaira(txn.amount)}
           </p>
           <dl className="mt-4 space-y-2.5 text-[14px]">
-            {[
+            {([
               ["Date", formatDate(txn.transaction_date)],
               ["Category", txn.category],
               ["Payment method", txn.payment_method ?? "—"],
               ["Debtor", txn.customer_or_vendor ?? "—"],
-              ...(txn.customer_phone ? [["WhatsApp / phone", txn.customer_phone] as [string, string]] : []),
-              ...(txn.due_date ? [["Promised to pay", formatDate(txn.due_date)] as [string, string]] : []),
+              ...(txn.customer_phone ? [["WhatsApp / phone", txn.customer_phone]] : []),
+              ...(txn.due_date ? [["Promised to pay", formatDate(txn.due_date)]] : []),
               ["Notes", txn.notes || "—"],
-              ["Source", txn.source === "ocr" ? "Scanned 📷" : "Added by hand ✍️"],
-            ].map(([k, v]) => (
+              ["Source", txn.source === "ocr" ? (<>Scanned <LuCamera className="inline" size={14} /></>) : (<>Added by hand <LuPencil className="inline" size={14} /></>)],
+            ] as [string, React.ReactNode][]).map(([k, v]) => (
               <div key={k} className="flex justify-between gap-4 border-b border-gray-50 pb-2">
                 <dt className="text-gray-500">{k}</dt>
                 <dd className="text-right font-semibold">{v}</dd>
@@ -100,7 +101,7 @@ function DetailInner() {
 
       {editing && (
         <Card className="mt-3">
-          <h2 className="text-[18px] font-extrabold">Edit transaction ✏️</h2>
+          <h2 className="text-[18px] font-extrabold">Edit transaction <LuPencil className="inline" size={18} /></h2>
           <p className="text-[13px] text-gray-500">
             Debtor record · {formatNaira(txn.amount)}
           </p>
