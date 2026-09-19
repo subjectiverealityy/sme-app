@@ -68,6 +68,51 @@ export interface Business {
   phone: string;
   location: string;
   description?: string;
+  payment_details?: string;
+  created_at: string;
+}
+
+export type ReminderLanguage = "english" | "pidgin";
+export type ReminderStatus = "sent" | "skipped";
+export type ReplyIntent = "promise_to_pay" | "dispute" | "part_payment" | "paid_claim" | "none";
+
+export interface DebtPayment {
+  id: string;
+  business_id: string;
+  transaction_id: string;
+  amount: number;
+  method?: string;
+  notes?: string;
+  paid_at: string;
+  created_at: string;
+}
+
+export interface DebtReminder {
+  id: string;
+  business_id: string;
+  transaction_id: string;
+  debtor_name: string;
+  debtor_phone: string;
+  stage: number;
+  language: ReminderLanguage;
+  message: string;
+  status: ReminderStatus;
+  sent_at: string;
+  created_at: string;
+}
+
+export interface DebtReply {
+  id: string;
+  business_id: string;
+  transaction_id: string;
+  raw_text: string;
+  raw_file_type?: string;
+  intent: ReplyIntent;
+  promised_date: string | null;
+  amount_mentioned: number | null;
+  confidence: number;
+  quote: string;
+  status: "draft" | "confirmed" | "dismissed";
   created_at: string;
 }
 
@@ -82,8 +127,8 @@ export interface Transaction {
   payment_status: PaymentStatus;
   payment_method?: string;
   customer_or_vendor?: string;
-  customer_phone?: string; // WhatsApp/phone number for wa.me links (optional)
-  due_date?: string | null; // promised payment date for credit income (ISO, optional)
+  customer_phone?: string;
+  reminder_language?: ReminderLanguage;
   notes?: string;
   source: TransactionSource;
   created_at: string;

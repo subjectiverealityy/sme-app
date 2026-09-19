@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --test tests/",
     "db:apply": "node scripts/apply-schema.cjs"
   },
   "dependencies": {

@@ -4,6 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
+  Receipt,
+  ScanLine,
+  HandCoins,
   Sparkles,
   Menu,
   ChevronLeft,
@@ -19,9 +22,9 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 
 const items = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/people", label: "People", icon: Users },
-  { href: "/transactions/new", label: "Add debtor", icon: Home, fab: true },
-  { href: "/ask", label: "Ask AI", icon: Sparkles },
+  { href: "/transactions", label: "Records", icon: Receipt },
+  { href: "/scan", label: "Scan", icon: ScanLine, fab: true },
+  { href: "/owed", label: "Collect", icon: HandCoins },
   { href: "/more", label: "More", icon: Menu },
 ];
 
@@ -97,8 +100,10 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
 const links = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/people", label: "People", icon: Users },
-  { href: "/ask", label: "Ask Credyt", icon: Sparkles },
+  { href: "/owed", label: "Who owes me", icon: HandCoins },
+  { href: "/transactions", label: "Transactions", icon: Receipt },
+  { href: "/scan", label: "Scan a Record", icon: ScanLine },
+  { href: "/ask", label: "Ask Ledgerly", icon: Sparkles },
   { href: "/reports", label: "Reports", icon: TrendingUp },
   { href: "/business", label: "Business", icon: Briefcase },
 ];
