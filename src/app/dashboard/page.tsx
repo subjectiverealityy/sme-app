@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign, Menu, MessageCircle, ShieldCheck, UserPlus } from "lucide-react";
+import { ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign, Menu, MessageCircle, ShieldCheck, UserPlus, Plus, TrendingDown, TrendingUp, ScanLine, Sparkles, Wallet } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { EmptyState, Skeleton } from "@/components/ui";
+import { EmptyState, Skeleton, Card } from "@/components/ui";
+import { AddFab } from "@/components/AddFab";
 import { getCustomers, getPeopleStats, followUpLabel, initials, type CustomerSummary } from "@/lib/customers";
 import { useSidebar } from "@/components/Nav";
-import { formatNaira, greetingForHour } from "@/lib/utils";
+import { filterByPreset, summarize, dailySeries } from "@/lib/finance";
+import { formatDate, formatNaira, greetingForHour } from "@/lib/utils";
+import { brokenPromises, buildDebtReport, longDate } from "@/lib/collections";
 
 function PageHeader({ name, businessName, action }: { name: string; businessName?: string; action?: React.ReactNode }) {
   const { open, setOpen } = useSidebar();
@@ -18,31 +21,56 @@ function PageHeader({ name, businessName, action }: { name: string; businessName
         <button
           onClick={() => setOpen(true)}
           aria-label="Open menu"
-          className="hidden rounded-xl border border-gray-200 bg-white p-2.5 text-gray-600 hover:text-[#0F5132] md:block"
+          className="hidden rounded-xl border border-gray-200 bg-white p-2.5 text-gray-600 hover:text-ink md:block"
         >
           <Menu size={20} />
         </button>
       )}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#70D7C0] text-[15px] font-extrabold text-[#272047]">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mint text-lg font-extrabold text-primary">
         {initial}
       </div>
       <div className="min-w-0 flex-1">
         <h1 className="truncate text-[22px] font-extrabold leading-tight text-[#272047] md:text-[28px]">
           {greetingForHour()}, {name}.
         </h1>
-        <p className="mt-1 text-[12px] text-[#756f84]">A clear little list of who needs a nudge, without the awkwardness.</p>
+        {businessName && (
+          <span className="mt-0.5 inline-block max-w-full truncate rounded-full bg-mint-light px-2.5 py-0.5 text-[12px] font-bold text-ink">
+            {businessName}
+          </span>
+        )}
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-2 text-[12px] text-[#756f84]"><span className="hidden sm:block">{businessName} <span className="text-[#d4cfd5]">/</span> Today</span>{action}</div>
+      <Link
+        href="/transactions/new?type=income"
+        className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[14px] font-bold text-white shadow-sm transition hover:bg-primary-dark"
+      >
+        <Plus size={17} /> <span className="hidden sm:inline">Add</span>
+      </Link>
     </div>
   );
 }
 
-function BalanceRow({ customer }: { customer: CustomerSummary }) {
-  return <Link href={`/people/${encodeURIComponent(customer.name)}`} className="group flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-[#faf7f2]"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#70D7C0] text-[10px] font-extrabold text-[#272047]">{initials(customer.name)}</span><span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-bold text-[#272047]">{customer.name}</span><span className="block text-[10px] text-[#8e8994]">{followUpLabel(customer)}</span></span><span className="text-right"><span className="block text-[12px] font-extrabold text-[#272047]">{formatNaira(customer.outstanding)}</span><ArrowUpRight size={12} className="ml-auto text-[#f28e68] transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /></span></Link>;
-}
+const QUICK_ACTIONS = [
+  { href: "/transactions/new?type=income", icon: "💰", label: "Record sale", sub: "Money in", bg: "bg-mint" },
+  { href: "/transactions/new?type=expense", icon: "🧾", label: "Add expense", sub: "Money out", bg: "bg-red-50" },
+  { href: "/scan", icon: "📷", label: "Scan record", sub: "Digitize paper", bg: "bg-amber-50" },
+  { href: "/ask", icon: "✨", label: "Ask AI", sub: "Insights", bg: "bg-violet-50" },
+];
 
 export default function DashboardPage() {
-  const { user, business, transactions, loading } = useStore();
+  const { user, business, transactions, debtPayments, debtReminders, debtReplies, loading } = useStore();
+  const [range, setRange] = useState<"week" | "month" | "year">("month");
+
+  const filtered = useMemo(() => filterByPreset(transactions, range), [transactions, range]);
+  const summary = useMemo(() => summarize(filtered), [filtered]);
+  const series = useMemo(() => dailySeries(filtered, range === "week" ? 7 : range === "month" ? 14 : 12), [filtered, range]);
+  const recent = useMemo(() => [...transactions].sort((a, b) => +new Date(b.transaction_date) - +new Date(a.transaction_date)).slice(0, 5), [transactions]);
+  const owedReport = useMemo(
+    () => buildDebtReport(transactions, debtPayments, debtReminders, debtReplies),
+    [transactions, debtPayments, debtReminders, debtReplies]
+  );
+  const broken = useMemo(() => brokenPromises(owedReport), [owedReport]);
+
+  const maxVal = Math.max(1, ...series.flatMap((s) => [s.income, s.expense]));
   const firstName = (user?.name || "there").split(" ")[0];
   const customers = useMemo(() => getCustomers(transactions), [transactions]);
   const peopleStats = useMemo(() => getPeopleStats(customers), [customers]);
@@ -66,7 +94,7 @@ export default function DashboardPage() {
       <div className="py-6">
         <PageHeader name={firstName} />
         <div className="mt-4">
-          <EmptyState title="Set up your business" body="Create your business profile to start." action={<Link href="/onboarding" className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#167C5A] font-semibold text-white">Set up business</Link>} />
+          <EmptyState title="Set up your business" body="Create your business profile to start." action={<Link href="/onboarding" className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-primary font-semibold text-white">Set up business</Link>} />
         </div>
       </div>
     );
@@ -75,18 +103,225 @@ export default function DashboardPage() {
   if (transactions.length === 0) {
     return (
       <div className="py-4 animate-fade-up">
-        <PageHeader name={firstName} businessName={business.name} action={<Link href="/transactions/new" className="hidden items-center gap-2 rounded-2xl bg-[#29224e] px-4 py-3 text-[14px] font-extrabold text-white shadow-sm transition hover:bg-[#3b3267] sm:inline-flex"><UserPlus size={17} /> Add debtor</Link>} />
-        <EmptyDebtorState />
+        <PageHeader name={firstName} businessName={business.name} />
+        {/* Hero empty state */}
+        <div className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#2D2445] to-[#443A5C] p-6 text-center text-white md:p-8">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-3xl">📒</div>
+          <h2 className="mt-3 text-[20px] font-extrabold md:text-[24px]">Your business story starts here.</h2>
+          <p className="mx-auto mt-1 max-w-[300px] text-[14px] text-white/80">
+            Record your first sale or expense and watch your profit appear.
+          </p>
+          <Link
+            href="/first-transaction"
+            className="mx-auto mt-4 block w-full max-w-[300px] rounded-2xl bg-white py-3.5 font-extrabold text-ink transition hover:scale-[1.02]"
+          >
+            Add your first transaction
+          </Link>
+        </div>
+
+        {/* Quick actions */}
+        <h2 className="mt-5 text-[15px] font-extrabold text-gray-500">START WITH ONE TAP</h2>
+        <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-4">
+          {QUICK_ACTIONS.map((a) => (
+            <Link key={a.label} href={a.href}>
+              <Card className="flex items-center gap-3 !p-3.5 transition hover:-translate-y-0.5 hover:shadow-md">
+                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${a.bg}`}>{a.icon}</span>
+                <span>
+                  <span className="block text-[14px] font-bold leading-tight">{a.label}</span>
+                  <span className="block text-[12px] text-gray-500">{a.sub}</span>
+                </span>
+              </Card>
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-3 rounded-2xl bg-mint-light px-4 py-3 text-[13px] text-ink">
+          💡 <b>Tip:</b> most owners start by recording today&apos;s sales — it takes about 30 seconds.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative py-4 text-[#272047] animate-fade-up">
-      <PageHeader name={firstName} businessName={business.name} action={<Link href="/transactions/new" className="flex items-center gap-2 rounded-2xl bg-[#29224e] px-4 py-3 text-[14px] font-extrabold text-white shadow-sm transition hover:bg-[#3b3267]"><UserPlus size={17} /> <span className="hidden sm:inline">Add debtor</span></Link>} />
-      <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3"><MetricCard label="Money owed" value={formatNaira(peopleStats.totalOutstanding)} detail={`${peopleStats.owingCount} people with open balances`} tone="navy" icon={<CircleDollarSign size={16} />} /><MetricCard label="Follow-ups due" value={String(peopleStats.followUpsDue)} detail="Promises that need your attention" tone="mint" icon={<CalendarDays size={16} />} /><MetricCard label="Reminders" value="0" detail="Always reviewed by you" tone="coral" icon={<Bell size={16} />} /></div>
-      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-[1.25fr_0.95fr]"><section className="rounded-2xl border border-[#e9e3da] bg-white p-4 shadow-[0_1px_5px_rgba(39,32,71,0.04)]"><SectionHeading icon={<Bell size={15} />} title="Follow up today" subtitle="Promises that need your attention." href="/people" /><div className="mt-3 rounded-xl border border-[#eee9e3] p-3">{followUps.length > 0 ? followUps.map((customer) => <BalanceRow key={customer.key} customer={customer} />) : <CaughtUp />}</div></section><section className="rounded-2xl border border-[#e9e3da] bg-white p-4 shadow-[0_1px_5px_rgba(39,32,71,0.04)]"><SectionHeading icon={<ArrowUpRight size={15} />} title="Largest balances" subtitle="A quick place to start." href="/people" /><div className="mt-3 space-y-1">{largestBalances.length > 0 ? largestBalances.map((customer) => <BalanceRow key={customer.key} customer={customer} />) : <p className="px-2 py-4 text-[12px] text-[#8e8994]">No open balances yet.</p>}</div></section></div>
-      <Link href="/people" className="mt-4 flex items-center gap-3 rounded-2xl border border-[#e9e3da] bg-white px-4 py-4 shadow-[0_1px_5px_rgba(39,32,71,0.04)] transition hover:border-[#70d7c0]"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fce0d3] text-[#d96e4d]"><MessageCircle size={17} /></span><span className="min-w-0 flex-1"><b className="block text-[13px]">A calmer way to collect</b><span className="block text-[11px] text-[#8e8994]">See the full picture, choose a kind next step, and keep promises visible.</span></span><ChevronRight size={17} className="text-[#8e8994]" /></Link>
+    <div className="py-4 animate-fade-up">
+      <PageHeader name={firstName} businessName={business.name} />
+
+      {/* Summary cards */}
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <Card className="border border-primary/10 bg-mint !p-3 md:!p-4">
+          <p className="flex items-center gap-1 text-[12px] font-bold text-ink"><TrendingUp size={13} /> Money In</p>
+          <p className="mt-1 text-[17px] font-extrabold text-ink md:text-[22px]">{formatNaira(summary.moneyIn)}</p>
+          <p className="text-[11px] text-ink/60">{summary.countIn} sale{summary.countIn === 1 ? "" : "s"}</p>
+        </Card>
+        <Card className="!p-3 md:!p-4">
+          <p className="flex items-center gap-1 text-[12px] font-bold text-gray-500"><TrendingDown size={13} /> Money Out</p>
+          <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(summary.moneyOut)}</p>
+          <p className="text-[11px] text-gray-400">{summary.countOut} expense{summary.countOut === 1 ? "" : "s"}</p>
+        </Card>
+        <Card className={`!p-3 md:!p-4 ${summary.profit >= 0 ? "bg-primary text-white" : "bg-red-600 text-white"}`}>
+          <p className="flex items-center gap-1 text-[12px] font-bold opacity-80"><Wallet size={13} /> Profit</p>
+          <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(summary.profit)}</p>
+          <p className="text-[11px] opacity-70">{summary.profit >= 0 ? "🎉 you're growing" : "watch spending"}</p>
+        </Card>
+      </div>
+
+      {broken.length > 0 && (
+        <Link href="/owed/queue">
+          <div className="mt-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] transition hover:shadow-sm">
+            <p className="font-bold text-[#B91C1C]">
+              🔔 {broken.length === 1 ? "1 promise broke" : `${broken.length} promises broke`}
+            </p>
+            <p className="mt-0.5 text-[13px] text-gray-700">
+              {broken.slice(0, 2).map((b) => `${b.debtorName} (${formatNaira(b.balance)}, said ${longDate(b.promisedDate)})`).join(" · ")}
+              {broken.length > 2 ? ` · +${broken.length - 2} more` : ""}
+            </p>
+            <p className="mt-1 font-bold text-ink">
+              → Send auto follow-ups
+              {broken.some((b) => !b.canSend) ? " (some cooling off)" : ""}
+            </p>
+          </div>
+        </Link>
+      )}
+
+      {summary.owedToYou > 0 && (
+        <Link href="/owed">
+          <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-[14px] transition hover:shadow-sm">
+            💛 <b>Money you&apos;re owed:</b> {formatNaira(summary.owedToYou)} <span className="font-bold text-ink">→ send reminders</span>
+          </div>
+        </Link>
+      )}
+
+      {/* Quick actions */}
+      <div className="mt-3 grid grid-cols-4 gap-2">
+        {[
+          { href: "/transactions/new?type=income", icon: <Plus size={18} />, label: "Income" },
+          { href: "/transactions/new?type=expense", icon: <TrendingDown size={18} />, label: "Expense" },
+          { href: "/scan", icon: <ScanLine size={18} />, label: "Scan" },
+          { href: "/ask", icon: <Sparkles size={18} />, label: "Ask AI" },
+        ].map((a) => (
+          <Link key={a.label} href={a.href} className="flex flex-col items-center gap-1 rounded-2xl bg-white py-3 text-ink shadow-sm transition hover:bg-mint-light">
+            {a.icon}
+            <span className="text-[12px] font-bold">{a.label}</span>
+          </Link>
+        ))}
+      </div>
+
+      <Card className="mt-3 md:mt-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-extrabold">Money in vs out</h2>
+          <div className="flex gap-1 rounded-full bg-gray-100 p-1 text-[12px] font-bold">
+            {(["week", "month", "year"] as const).map((r) => (
+              <button key={r} onClick={() => setRange(r)} className={`rounded-full px-3 py-1 ${range === r ? "bg-white shadow" : "text-gray-500"}`}>
+                {r === "week" ? "Week" : r === "month" ? "Month" : "Year"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="md:col-span-2">
+            <div className="flex h-40 items-end gap-1.5 md:h-48">
+              {series.map((s, i) => (
+                <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                  <div className="flex w-full items-end justify-center gap-0.5">
+                    <div className="w-2.5 rounded-t bg-primary md:w-3.5" style={{ height: `${Math.max(3, (s.income / maxVal) * 140)}px` }} title={`In ${s.income}`} />
+                    <div className="w-2.5 rounded-t bg-red-300 md:w-3.5" style={{ height: `${Math.max(3, (s.expense / maxVal) * 140)}px` }} title={`Out ${s.expense}`} />
+                  </div>
+                  {(series.length <= 8 || i % 2 === 0) && <span className="text-[9px] text-gray-400 md:text-[11px]">{s.label.slice(0, 3)}</span>}
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex gap-4 text-[12px] text-gray-500">
+              <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-primary" />Money in</span>
+              <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-red-300" />Money out</span>
+            </div>
+          </div>
+          {/* Side rail — fills wide screens */}
+          <div className="flex flex-col gap-2 border-t border-gray-100 pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
+            <div className="rounded-2xl bg-background p-3.5">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-gray-400">This {range}</p>
+              <p className="mt-1 text-[14px]">Money in <b className="text-ink">{formatNaira(summary.moneyIn)}</b></p>
+              <p className="text-[14px]">Money out <b>{formatNaira(summary.moneyOut)}</b></p>
+              <p className="text-[14px]">Owed to you <b className="text-amber-600">{formatNaira(summary.owedToYou)}</b></p>
+            </div>
+            <Link href="/reports" className="rounded-2xl bg-mint-light p-3.5 text-[14px] font-bold text-ink transition hover:shadow-sm">
+              📊 View full reports →
+            </Link>
+            <Link href="/export" className="rounded-2xl border border-gray-200 p-3.5 text-[14px] font-bold transition hover:shadow-sm">
+              📤 Export CSV / PDF →
+            </Link>
+          </div>
+        </div>
+      </Card>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div>
+          <div className="flex items-center justify-between">
+            <h2 className="font-extrabold">Recent transactions</h2>
+            <Link href="/transactions" className="text-[13px] font-bold text-ink">View all →</Link>
+          </div>
+          <div className="mt-2 flex flex-col gap-2">
+            {recent.map((t) => (
+              <Link key={t.id} href={`/transactions/${t.id}`}>
+                <Card className="flex items-center gap-3 !p-3 transition hover:shadow-md">
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-full ${t.type === "income" ? "bg-mint-light" : "bg-red-50"}`}>
+                    {t.type === "income" ? "💰" : "🧾"}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[14px] font-bold">{t.description}</span>
+                    <span className="text-[12px] text-gray-500">{formatDate(t.transaction_date)}</span>
+                  </span>
+                  <span className={`font-extrabold ${t.type === "income" ? "text-ink" : ""}`}>
+                    {t.type === "income" ? "+" : "−"}{formatNaira(t.amount)}
+                  </span>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2 className="font-extrabold">What next?</h2>
+          <div className="mt-2 flex flex-col gap-2">
+            <Link href="/owed">
+              <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-xl">💛</span>
+                <span>
+                  <span className="block text-[14px] font-bold">Who owes me</span>
+                  <span className="block text-[12px] text-gray-500">Send WhatsApp reminders</span>
+                </span>
+              </Card>
+            </Link>
+            <Link href="/scan">
+              <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-xl">📷</span>
+                <span>
+                  <span className="block text-[14px] font-bold">Digitize paper records</span>
+                  <span className="block text-[12px] text-gray-500">Snap a receipt, Credyt reads it</span>
+                </span>
+              </Card>
+            </Link>
+            <Link href="/ask">
+              <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-xl">✨</span>
+                <span>
+                  <span className="block text-[14px] font-bold">Ask about your business</span>
+                  <span className="block text-[12px] text-gray-500">“Where did I spend most?”</span>
+                </span>
+              </Card>
+            </Link>
+            <Link href="/reports">
+              <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-mint-light text-xl">📊</span>
+                <span>
+                  <span className="block text-[14px] font-bold">See your reports</span>
+                  <span className="block text-[12px] text-gray-500">Income, expenses & profit</span>
+                </span>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      </div>
+      <AddFab />
     </div>
   );
 }

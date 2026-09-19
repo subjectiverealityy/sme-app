@@ -41,7 +41,7 @@ function FormInner() {
         payment_status: status,
         customer_or_vendor: person.trim(),
         customer_phone: phone.replace(/[\s-]/g, "") || undefined,
-        due_date: status === "credit" && promiseDate ? promiseDate : null,
+        due_date: status === "credit" && promiseDate ? promiseDate : undefined,
         notes: notes.trim() || undefined,
         source: "manual",
       });

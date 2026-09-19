@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { BottomNav, Sidebar, SidebarProvider, useSidebar } from "@/components/Nav";
 import { cn } from "@/lib/utils";
 
-const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password"];
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/r"];
 
 function isPublic(pathname: string | null) {
   if (!pathname) return false;
@@ -20,6 +20,8 @@ function AppFrame({ children }: { children: React.ReactNode }) {
     pathname === "/first-transaction" ||
     pathname === "/success" ||
     pathname === "/transactions/new" ||
+    pathname === "/owed/queue" ||
+    (pathname?.startsWith("/owed/") && pathname !== "/owed") ||
     (pathname?.startsWith("/transactions/") && pathname !== "/transactions");
   return (
     <>
