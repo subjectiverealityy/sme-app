@@ -17,6 +17,7 @@ interface PendingDraft {
   category: string;
   payment_status: "paid" | "credit" | "interested";
   customer_or_vendor?: string;
+  customer_phone?: string;
 }
 
 export default function AskPage() {
@@ -101,6 +102,7 @@ export default function AskPage() {
           category: "Sales",
           payment_status: ["paid", "credit", "interested"].includes(d.payment_status) ? d.payment_status : "paid",
           customer_or_vendor: d.customer_or_vendor ? String(d.customer_or_vendor) : undefined,
+          customer_phone: d.customer_phone ? String(d.customer_phone) : undefined,
         });
       }
     } catch {
@@ -128,6 +130,7 @@ export default function AskPage() {
         transaction_date: new Date().toISOString(),
         payment_status: pending.payment_status,
         customer_or_vendor: pending.customer_or_vendor || undefined,
+        customer_phone: pending.customer_phone || undefined,
         source: "manual",
       });
       const sid = pending.sessionId;
@@ -280,6 +283,16 @@ export default function AskPage() {
                       value={String(pending.amount)}
                       inputMode="numeric"
                       onChange={(e) => setPending({ ...pending, amount: Number(e.target.value.replace(/,/g, "")) || 0 })}
+                      className="mt-0.5 min-h-[44px] w-full rounded-xl border border-gray-200 bg-white px-3 text-[14px]"
+                    />
+                  </label>
+                  <label className="col-span-2 block">
+                    <span className="text-[12px] font-semibold text-gray-500">Phone / WhatsApp (optional)</span>
+                    <input
+                      value={pending.customer_phone ?? ""}
+                      inputMode="tel"
+                      placeholder="e.g. 0803 123 4567"
+                      onChange={(e) => setPending({ ...pending, customer_phone: e.target.value })}
                       className="mt-0.5 min-h-[44px] w-full rounded-xl border border-gray-200 bg-white px-3 text-[14px]"
                     />
                   </label>

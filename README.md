@@ -49,3 +49,7 @@ Bottom nav (mobile): Home, Records, Scan, Ask AI, More. Desktop: sidebar.
 ## Money
 
 Amounts stored as `numeric(14,2)`, displayed as ₦. Profit = paid income − expenses. Owed = pending/credit income.
+
+
+## Video Demo
+https://drive.google.com/file/d/1S2mor93730zNmFUVs9irT6sphgEGQ0HP/view?usp=sharing

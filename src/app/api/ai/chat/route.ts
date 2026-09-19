@@ -17,6 +17,7 @@ interface RecordDraft {
   category: "Sales";
   payment_status: "paid" | "credit" | "interested";
   customer_or_vendor?: string;
+  customer_phone?: string;
 }
 
 function normalizeStatus(status: string) {
@@ -71,11 +72,13 @@ function parseRecordIntent(question: string): RecordDraft | null {
   const customer = customerCandidate && !/^(today|yesterday|this|last|the|my|a|an)\b/i.test(customerCandidate)
     ? customerCandidate.trim()
     : undefined;
+  const phoneMatch = q.match(/(?:phone|tel|whatsapp|number)?\s*(0\d{3}[\s-]?\d{3}[\s-]?\d{4}|234\s?\d{3}[\s-]?\d{3}[\s-]?\d{4})\b/i);
+  const customerPhone = phoneMatch?.[1]?.replace(/[\s-]/g, "");
   let description = q.replace(amountMatch[0], "").replace(/\b(record|add|log|save|interested|considering|potential|credit|owe|owes|owed|unpaid|paid|promise|will pay)\b/gi, "");
   if (personMatch) description = description.replace(personMatch[0], "");
   if (recordPersonMatch) description = description.replace(recordPersonMatch[0], "");
   description = description.replace(/\s+/g, " ").trim().slice(0, 80) || "Product or service";
-  return { type: "income", description, amount: Math.round(amount), category: "Sales", payment_status: status, customer_or_vendor: customer };
+  return { type: "income", description, amount: Math.round(amount), category: "Sales", payment_status: status, customer_or_vendor: customer, customer_phone: customerPhone };
 }
 
 export async function POST(req: NextRequest) {
