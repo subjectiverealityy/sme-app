@@ -128,6 +128,7 @@ export interface Transaction {
   payment_method?: string;
   customer_or_vendor?: string;
   customer_phone?: string;
+  due_date?: string; // ISO date, optional
   reminder_language?: ReminderLanguage;
   notes?: string;
   source: TransactionSource;

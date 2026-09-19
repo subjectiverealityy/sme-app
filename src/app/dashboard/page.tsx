@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign, Menu, MessageCircle, ShieldCheck, UserPlus } from "lucide-react";
+import { ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign, Menu, MessageCircle, ShieldCheck, UserPlus, Plus, TrendingDown, TrendingUp, ScanLine, Sparkles, Wallet } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { EmptyState, Skeleton } from "@/components/ui";
+import { EmptyState, Skeleton, Card } from "@/components/ui";
+import { AddFab } from "@/components/AddFab";
 import { getCustomers, getPeopleStats, followUpLabel, initials, type CustomerSummary } from "@/lib/customers";
 import { useSidebar } from "@/components/Nav";
 import { filterByPreset, summarize, dailySeries } from "@/lib/finance";

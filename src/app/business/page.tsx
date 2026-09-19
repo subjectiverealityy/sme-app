@@ -32,6 +32,7 @@ export default function BusinessPage() {
         phone: business.phone ?? "",
         location: business.location ?? "",
         description: business.description ?? "",
+        payment_details: business.payment_details ?? "",
       });
     }
   }, [business, editing]);
@@ -82,6 +83,7 @@ export default function BusinessPage() {
       phone: business.phone ?? "",
       location: business.location ?? "",
       description: business.description ?? "",
+      payment_details: business.payment_details ?? "",
     });
     setMsg("");
     setEditing(false);

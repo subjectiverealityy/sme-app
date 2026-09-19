@@ -4,6 +4,7 @@ interface Txn {
   type: "income" | "expense";
   description: string;
   amount: number;
+  category?: string;
   transaction_date: string;
   payment_status: string;
   customer_or_vendor?: string;
@@ -102,10 +103,9 @@ export async function POST(req: NextRequest) {
     const totalOut = transactions.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount || 0), 0);
     const monthIn = monthTx.filter((t) => t.type === "income").reduce((s, t) => s + Number(t.amount || 0), 0);
     const monthOut = monthTx.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount || 0), 0);
-    const owed = transactions.filter((t) => t.type === "income" && t.payment_status !== "paid").reduce((s, t) => s + Number(t.amount || 0), 0);
     const byCat: Record<string, number> = {};
     for (const t of monthTx.filter((t) => t.type === "expense")) {
-      byCat[t.category] = (byCat[t.category] || 0) + Number(t.amount);
+      byCat[t.category ?? "Other"] = (byCat[t.category ?? "Other"] || 0) + Number(t.amount);
     }
 
     const records = debtorRecords(transactions);
@@ -113,6 +113,7 @@ export async function POST(req: NextRequest) {
     const interested = records.filter((t) => normalizeStatus(t.payment_status) === "interested");
     const paid = records.filter((t) => normalizeStatus(t.payment_status) === "paid");
     const owed = credit.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const draft = parseRecordIntent(question);
     const context = `You are Credyt, a friendly debtor follow-up assistant for Nigerian small businesses. Only discuss debtors, people on credit, interested people, follow-ups, and people converted to paid customers. Never discuss income, expenses, spending, profit, sales totals, or accounting.
 Verified figures:
 - Total debtor records: ${records.length}

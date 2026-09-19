@@ -4,6 +4,10 @@ Mobile-first app for Nigerian micro & small businesses who sell on credit. Track
 
 Next.js + TypeScript + Tailwind + Supabase + Gemini.
 
+## Product demo
+
+[Watch the product demo video](https://drive.google.com/file/d/1S2mor93730zNmFUVs9irT6sphgEGQ0HP/view?usp=sharing)
+
 ## Quick start
 
 ```bash
