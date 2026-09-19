@@ -10,10 +10,10 @@ export function Button({
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
 }) {
   const styles = {
-    primary: "bg-[#167C5A] text-white hover:bg-[#0F5132] active:scale-[0.99]",
-    secondary: "bg-[#DDF5EA] text-[#0F5132] hover:bg-[#c8ecdc]",
-    outline: "border border-[#167C5A] text-[#0F5132] bg-white hover:bg-[#DDF5EA]",
-    ghost: "text-[#0F5132] hover:bg-[#DDF5EA]",
+    primary: "bg-[#29224e] text-white hover:bg-[#3b3267] active:scale-[0.99]",
+    secondary: "bg-[#d9f5ed] text-[#272047] hover:bg-[#c3eee2]",
+    outline: "border border-[#11b7ab] text-[#272047] bg-white hover:bg-[#d9f5ed]",
+    ghost: "text-[#272047] hover:bg-[#d9f5ed]",
     danger: "bg-red-600 text-white hover:bg-red-700",
   } as const;
   return (
@@ -38,7 +38,7 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { lab
       <input
         className={cn(
           "min-h-[48px] w-full rounded-xl border bg-white px-4 py-3 text-[16px] text-[#17221D] placeholder:text-gray-400",
-          error ? "border-red-500" : "border-gray-200 focus:border-[#167C5A]",
+          error ? "border-red-500" : "border-gray-200 focus:border-[#11b7ab]",
           className
         )}
         {...rest}
@@ -57,7 +57,7 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement> & { 
       <select
         className={cn(
           "min-h-[48px] w-full rounded-xl border bg-white px-4 py-3 text-[16px]",
-          error ? "border-red-500" : "border-gray-200 focus:border-[#167C5A]",
+          error ? "border-red-500" : "border-gray-200 focus:border-[#11b7ab]",
           className
         )}
         {...rest}
@@ -89,7 +89,7 @@ export function Card({ children, className }: { children: React.ReactNode; class
 export function Badge({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "green" | "amber" | "red" }) {
   const map = {
     neutral: "bg-gray-100 text-gray-700",
-    green: "bg-[#DDF5EA] text-[#0F5132]",
+    green: "bg-[#d9f5ed] text-[#272047]",
     amber: "bg-amber-100 text-amber-800",
     red: "bg-red-100 text-red-700",
   };
@@ -99,8 +99,8 @@ export function Badge({ children, tone = "neutral" }: { children: React.ReactNod
 export function EmptyState({ title, body, action }: { title: string; body: string; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center rounded-2xl bg-white px-6 py-10 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#DDF5EA] text-xl">📒</div>
-      <h3 className="text-[17px] font-bold text-[#0F5132]">{title}</h3>
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#d9f5ed] text-xl">📒</div>
+      <h3 className="text-[17px] font-bold text-[#272047]">{title}</h3>
       <p className="mt-1 max-w-[260px] text-[14px] text-gray-600">{body}</p>
       {action && <div className="mt-4 w-full max-w-[260px]">{action}</div>}
     </div>

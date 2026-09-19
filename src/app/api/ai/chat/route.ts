@@ -4,65 +4,73 @@ interface Txn {
   type: "income" | "expense";
   description: string;
   amount: number;
-  category: string;
   transaction_date: string;
   payment_status: string;
+  customer_or_vendor?: string;
+  due_date?: string | null;
+}
+
+interface RecordDraft {
+  type: "income";
+  description: string;
+  amount: number;
+  category: "Sales";
+  payment_status: "paid" | "credit" | "interested";
+  customer_or_vendor?: string;
+}
+
+function normalizeStatus(status: string) {
+  return status === "pending" ? "credit" : status;
+}
+
+function debtorRecords(txns: Txn[]) {
+  return txns.filter((t) => t.type === "income" && t.customer_or_vendor?.trim());
 }
 
 function localAnswer(question: string, txns: Txn[]): string {
   const q = question.toLowerCase();
-  if (txns.length === 0) return "I don't have enough recorded transactions to answer that yet. Record some sales or expenses first.";
-  const now = new Date();
-  const monthTx = txns.filter((t) => {
-    const d = new Date(t.transaction_date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
-  const sum = (arr: Txn[], type?: string) =>
-    arr.filter((t) => !type || t.type === type).reduce((s, t) => s + Number(t.amount || 0), 0);
+  const records = debtorRecords(txns);
+  if (records.length === 0) return "I don't have enough debtor records to answer that yet. Add a person and their status first.";
+  const credit = records.filter((t) => normalizeStatus(t.payment_status) === "credit");
+  const interested = records.filter((t) => normalizeStatus(t.payment_status) === "interested");
+  const paid = records.filter((t) => normalizeStatus(t.payment_status) === "paid");
   const fmt = (n: number) => `₦${Math.round(n).toLocaleString("en-NG")}`;
+  const owed = credit.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  const people = (items: Txn[]) => [...new Set(items.map((t) => t.customer_or_vendor).filter(Boolean))].join(", ");
 
-  if (q.includes("how much") && q.includes("owe")) {
-    const owed = txns.filter((t) => t.type === "income" && t.payment_status !== "paid").reduce((s, t) => s + Number(t.amount), 0);
-    return owed === 0 ? "Good news — nobody owes you right now. All recorded income is marked paid." : `You are owed ${fmt(owed)} from ${txns.filter((t) => t.type === "income" && t.payment_status !== "paid").length} unpaid sale(s).`;
+  if (q.includes("owe") || q.includes("credit") || q.includes("debtor")) {
+    return credit.length === 0 ? "Good news — nobody is currently on credit." : `You are owed ${fmt(owed)} across ${credit.length} credit record(s): ${people(credit)}.`;
   }
-  if (q.includes("make") || q.includes("income") || q.includes("profit") || q.includes("earn")) {
-    if (q.includes("last month")) {
-      const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const lm = txns.filter((t) => {
-        const d = new Date(t.transaction_date);
-        return d.getMonth() === last.getMonth() && d.getFullYear() === last.getFullYear();
-      });
-      const cur = sum(monthTx, "income");
-      const prev = sum(lm, "income");
-      const diff = cur - prev;
-      return `This month you made ${fmt(cur)} and last month ${fmt(prev)}. That's ${diff >= 0 ? "up" : "down"} by ${fmt(Math.abs(diff))}.`;
-    }
-    const mIn = sum(monthTx, "income");
-    return `This month you've made ${fmt(mIn)} from ${monthTx.filter((t) => t.type === "income").length} sale(s).`;
+  if (q.includes("interest") || q.includes("interested") || q.includes("lead") || q.includes("potential")) {
+    return interested.length === 0 ? "You have no interested contacts recorded yet." : `${interested.length} interested contact(s) need a thoughtful follow-up: ${people(interested)}.`;
   }
-  if (q.includes("spend") || q.includes("expense") || q.includes("biggest")) {
-    const byCat = new Map<string, number>();
-    for (const t of monthTx.filter((t) => t.type === "expense")) {
-      byCat.set(t.category, (byCat.get(t.category) || 0) + Number(t.amount));
-    }
-    if (byCat.size === 0) return "No expenses recorded this month yet.";
-    const sorted = [...byCat.entries()].sort((a, b) => b[1] - a[1]);
-    const [topCat, topAmt] = sorted[0];
-    const breakdown = sorted.slice(0, 3).map(([c, v]) => `${c}: ${fmt(v)}`).join(", ");
-    return `You spent the most on ${topCat.toLowerCase()}, with ${fmt(topAmt)} spent this month. Breakdown — ${breakdown}.`;
+  if (q.includes("paid") || q.includes("convert") || q.includes("customer")) {
+    return paid.length === 0 ? "No paid customers are recorded yet." : `${paid.length} contact(s) have converted to paid customers: ${people(paid)}.`;
   }
-  if (q.includes("sell") || q.includes("most")) {
-    const byDesc = new Map<string, number>();
-    for (const t of monthTx.filter((t) => t.type === "income")) {
-      byDesc.set(t.description, (byDesc.get(t.description) || 0) + Number(t.amount));
-    }
-    if (byDesc.size === 0) return "No sales recorded this month yet.";
-    const [top, amt] = [...byDesc.entries()].sort((a, b) => b[1] - a[1])[0];
-    return `Your top sale this month is "${top}" with ${fmt(amt)}.`;
+  if (q.includes("follow") || q.includes("remind") || q.includes("due")) {
+    const due = credit.filter((t) => t.due_date && new Date(t.due_date) <= new Date());
+    return due.length === 0 ? "There are no credit follow-ups due today." : `${due.length} credit follow-up(s) are due: ${people(due)}.`;
   }
-  const totalIn = sum(txns, "income");
-  const totalOut = sum(txns, "expense");
-  return `Here's a quick summary: total money in ${fmt(totalIn)}, money out ${fmt(totalOut)}, profit ${fmt(totalIn - totalOut)} across ${txns.length} records. Ask me "Where did I spend the most money?" for more detail.`;
+  return `You have ${new Set(records.map((t) => t.customer_or_vendor)).size} people recorded: ${credit.length} on credit, ${interested.length} interested, and ${paid.length} paid.`;
+}
+
+function parseRecordIntent(question: string): RecordDraft | null {
+  const q = question.trim();
+  if (!/\b(record|add|log|save)\b/i.test(q) || /\b(how much|how many|what|where|when|which|who|show|list|total)\b/i.test(q)) return null;
+  const amountMatch = q.match(/₦\s?([\d,]+(?:\.\d+)?)|([\d,]+(?:\.\d+)?)\s?naira/i);
+  const amount = amountMatch ? Number((amountMatch[1] ?? amountMatch[2]).replace(/,/g, "")) : 0;
+  if (!amountMatch || !amount || amount <= 0) return null;
+  const status: RecordDraft["payment_status"] = /\b(interested|considering|enquir|potential|maybe)\b/i.test(q)
+    ? "interested"
+    : /\b(credit|owe|owes|owed|unpaid|promise|later|will pay)\b/i.test(q)
+      ? "credit"
+      : "paid";
+  const personMatch = q.match(/\b(?:from|to|for)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z.]+){0,2})/);
+  const customer = personMatch && !/^(today|yesterday|this|last|the|my|a|an)\b/i.test(personMatch[1]) ? personMatch[1].trim() : undefined;
+  let description = q.replace(amountMatch[0], "").replace(/\b(record|add|log|save|interested|considering|potential|credit|owe|owes|owed|unpaid|paid|promise|will pay)\b/gi, "");
+  if (personMatch) description = description.replace(personMatch[0], "");
+  description = description.replace(/\s+/g, " ").trim().slice(0, 80) || "Product or service";
+  return { type: "income", description, amount: Math.round(amount), category: "Sales", payment_status: status, customer_or_vendor: customer };
 }
 
 export async function POST(req: NextRequest) {
@@ -95,20 +103,26 @@ export async function POST(req: NextRequest) {
       byCat[t.category] = (byCat[t.category] || 0) + Number(t.amount);
     }
 
-    const context = `You are Ledgerly, a friendly assistant for Nigerian small businesses. Use plain language, Naira (₦), no accounting jargon.
-Verified figures (do NOT invent numbers, use these):
-- Total money in: ${totalIn}, total money out: ${totalOut}, profit: ${totalIn - totalOut}
-- This month in: ${monthIn}, out: ${monthOut}
-- Owed to user: ${owed}
-- Expense by category this month: ${JSON.stringify(byCat)}
-- Record count: ${transactions.length}
-If data is missing say you don't have enough records. Question: ${question}`;
+    const records = debtorRecords(transactions);
+    const credit = records.filter((t) => normalizeStatus(t.payment_status) === "credit");
+    const interested = records.filter((t) => normalizeStatus(t.payment_status) === "interested");
+    const paid = records.filter((t) => normalizeStatus(t.payment_status) === "paid");
+    const owed = credit.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const context = `You are Credyt, a friendly debtor follow-up assistant for Nigerian small businesses. Only discuss debtors, people on credit, interested people, follow-ups, and people converted to paid customers. Never discuss income, expenses, spending, profit, sales totals, or accounting.
+Verified figures:
+- Total debtor records: ${records.length}
+- People on credit: ${credit.length}, total owed: ${owed}
+- Interested people: ${interested.length}
+- Converted paid customers: ${paid.length}
+- Debtor records: ${JSON.stringify(records)}
+${draft ? `The user wants to record a debtor. Draft: ${JSON.stringify(draft)}. Confirm the person and status in one short sentence. Do not claim it is saved; they still need to tap Save.` : ""}
+If the requested debtor information is missing, say so plainly. Question: ${question}`;
 
     const text = (await groq([{ role: "user", content: context }], { temperature: 0.2, maxTokens: 800 })) ||
       localAnswer(question, transactions);
     return NextResponse.json({ answer: text, provider: "groq" });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ answer: "AI is unavailable right now. Try again shortly." }, { status: 500 });
+    return NextResponse.json({ answer: "Credyt is unavailable right now. Try again shortly." }, { status: 500 });
   }
 }

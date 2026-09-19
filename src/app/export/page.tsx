@@ -27,7 +27,7 @@ function Inner() {
   const totalOut = filtered.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
 
   function exportCSV() {
-    const header = "Date,Type,Description,Category,Status,Method,Customer/Vendor,Amount (NGN),Notes";
+    const header = "Date,Type,Description,Category,Status,Method,Customer/Vendor,Customer Phone,Promise Date,Amount (NGN),Notes";
     const rows = filtered.map((t) =>
       [
         new Date(t.transaction_date).toLocaleDateString("en-GB"),
@@ -37,6 +37,8 @@ function Inner() {
         t.payment_status,
         t.payment_method ?? "",
         `"${t.customer_or_vendor ?? ""}"`,
+        `"${t.customer_phone ?? ""}"`,
+        t.due_date ? new Date(t.due_date).toLocaleDateString("en-GB") : "",
         t.amount,
         `"${(t.notes ?? "").replace(/"/g, '""')}"`,
       ].join(",")

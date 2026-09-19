@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Pencil, Save, X } from "lucide-react";
 import { Button, Card, Input, Select, Textarea } from "@/components/ui";
 import { BUSINESS_CATEGORIES } from "@/lib/constants";
 import { useStore } from "@/lib/store";
@@ -10,6 +11,7 @@ import { getSupabaseBrowser, isSupabaseConfigured } from "@/lib/supabase/client"
 export default function BusinessPage() {
   const { business, setBusiness } = useStore();
   const router = useRouter();
+  const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     name: business?.name ?? "",
     category: business?.category ?? "Other",
@@ -21,22 +23,68 @@ export default function BusinessPage() {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Sync form once business loads
+  useEffect(() => {
+    if (business && !editing) {
+      setForm({
+        name: business.name ?? "",
+        category: business.category ?? "Other",
+        phone: business.phone ?? "",
+        location: business.location ?? "",
+        description: business.description ?? "",
+      });
+    }
+  }, [business, editing]);
+
   async function save() {
+    if (!form.name.trim()) {
+      setMsg("Business name can't be empty.");
+      return;
+    }
     setLoading(true);
+    setMsg("");
     try {
-      const next = { ...business, ...form, id: business?.id ?? "biz_demo", owner_id: business?.owner_id ?? "demo-user", created_at: business?.created_at ?? new Date().toISOString() };
       if (isSupabaseConfigured() && business?.id && business.id !== "biz_demo") {
         const supabase = getSupabaseBrowser()!;
-        const { error } = await supabase.from("businesses").update(form).eq("id", business.id);
+        const { error } = await supabase
+          .from("businesses")
+          .update({
+            name: form.name.trim(),
+            category: form.category,
+            phone: form.phone.trim(),
+            location: form.location.trim(),
+            description: form.description.trim() || null,
+          })
+          .eq("id", business.id);
         if (error) throw error;
       }
-      setBusiness(next as typeof business & {});
+      setBusiness({ ...business, ...form } as typeof business & {});
       setMsg("Business profile saved ✓");
+      setEditing(false);
     } catch (e: unknown) {
-      setMsg(e instanceof Error ? e.message : "Save failed.");
+      const m =
+        e instanceof Error
+          ? e.message
+          : typeof e === "object" && e !== null && "message" in e
+            ? String((e as { message: unknown }).message)
+            : "Save failed.";
+      setMsg(m);
     } finally {
       setLoading(false);
     }
+  }
+
+  function cancel() {
+    if (!business) return;
+    setForm({
+      name: business.name ?? "",
+      category: business.category ?? "Other",
+      phone: business.phone ?? "",
+      location: business.location ?? "",
+      description: business.description ?? "",
+    });
+    setMsg("");
+    setEditing(false);
   }
 
   if (!business) {
@@ -47,6 +95,14 @@ export default function BusinessPage() {
       </div>
     );
   }
+
+  const rows: [string, string][] = [
+    ["Business name", business.name],
+    ["Category", business.category],
+    ["Phone", business.phone || "—"],
+    ["Location", business.location || "—"],
+    ["Description", business.description || "—"],
+  ];
 
   return (
     <div className="py-4 animate-fade-up">

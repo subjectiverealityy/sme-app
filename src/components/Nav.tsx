@@ -9,14 +9,15 @@ import {
   HandCoins,
   Sparkles,
   Menu,
-  X,
   ChevronLeft,
   ChevronRight,
-  Settings,
   Briefcase,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useStore } from "@/lib/store";
+import { Logo } from "@/components/Logo";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 const items = [
@@ -41,12 +42,12 @@ export function BottomNav() {
                 <span
                   className={cn(
                     "flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition",
-                    active ? "bg-[#0F5132] text-white" : "bg-[#167C5A] text-white"
+                    active ? "bg-[#29224e] text-white" : "bg-[#11b7ab] text-[#272047]"
                   )}
                 >
-                  <Icon size={22} />
+                  <Logo size={30} showWordmark={false} />
                 </span>
-                <span className={cn("mt-0.5 text-[11px] font-semibold", active ? "text-[#0F5132]" : "text-gray-500")}>
+                <span className={cn("mt-0.5 text-[11px] font-semibold", active ? "text-[#29224e]" : "text-gray-500")}>
                   {it.label}
                 </span>
               </Link>
@@ -54,8 +55,8 @@ export function BottomNav() {
           }
           return (
             <Link key={it.href} href={it.href} className="flex flex-col items-center py-2.5">
-              <Icon size={22} className={active ? "text-[#167C5A]" : "text-gray-400"} />
-              <span className={cn("mt-0.5 text-[11px] font-semibold", active ? "text-[#0F5132]" : "text-gray-500")}>
+              <Icon size={22} className={active ? "text-[#11b7ab]" : "text-gray-400"} />
+              <span className={cn("mt-0.5 text-[11px] font-semibold", active ? "text-[#29224e]" : "text-gray-500")}>
                 {it.label}
               </span>
             </Link>
@@ -105,17 +106,18 @@ const links = [
   { href: "/ask", label: "Ask Ledgerly", icon: Sparkles },
   { href: "/reports", label: "Reports", icon: TrendingUp },
   { href: "/business", label: "Business", icon: Briefcase },
-  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { open, setOpen } = useSidebar();
+  const { user } = useStore();
+  const initial = ((user?.name || user?.email || "B").trim().charAt(0) || "B").toUpperCase();
 
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-gray-100 bg-white transition-all duration-200 md:flex",
+        "fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-white/10 bg-[#272047] transition-all duration-200 md:flex",
         open ? "w-64" : "w-[68px]"
       )}
     >
@@ -123,23 +125,11 @@ export function Sidebar() {
       <div className="flex items-center justify-between px-4 pt-5">
         {open ? (
           <>
-            <span className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#167C5A]">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="4" width="13" height="3" rx="1.5" fill="white" />
-                  <rect x="3" y="9" width="9" height="3" rx="1.5" fill="white" opacity="0.9" />
-                  <rect x="3" y="14" width="11" height="3" rx="1.5" fill="white" opacity="0.9" />
-                  <circle cx="18.5" cy="16.5" r="3.5" fill="#0F5132" stroke="white" strokeWidth="1.2" />
-                </svg>
-              </span>
-              <span className="text-[19px] font-extrabold tracking-tight">
-                Ledger<span className="text-[#167C5A]">ly</span>
-              </span>
-            </span>
+            <Logo size={36} inverse />
             <button
               onClick={() => setOpen(false)}
               aria-label="Collapse sidebar"
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-[#0F5132]"
+              className="rounded-lg p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
             >
               <ChevronLeft size={18} />
             </button>
@@ -148,7 +138,7 @@ export function Sidebar() {
           <button
             onClick={() => setOpen(true)}
             aria-label="Expand sidebar"
-            className="mx-auto rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-[#0F5132]"
+            className="mx-auto rounded-lg p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
           >
             <ChevronRight size={18} />
           </button>
@@ -156,7 +146,7 @@ export function Sidebar() {
       </div>
 
       {open && (
-        <div className="px-5 pb-1 pt-4 text-[12px] font-bold uppercase tracking-widest text-gray-400">Menu</div>
+        <div className="px-5 pb-1 pt-4 text-[12px] font-bold uppercase tracking-widest text-white/45">Menu</div>
       )}
 
       {/* Links */}
@@ -172,7 +162,7 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition",
                 open ? "w-full" : "w-11 justify-center",
-                active ? "bg-[#DDF5EA] font-bold text-[#0F5132]" : "text-gray-600 hover:bg-gray-50"
+                active ? "bg-white/12 font-bold text-[#70D7C0]" : "text-white/70 hover:bg-white/8 hover:text-white"
               )}
             >
               <Icon size={20} className="shrink-0" />
@@ -182,17 +172,31 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom: close hint when expanded */}
-      {open && (
-        <div className="border-t border-gray-100 p-3">
-          <button
-            onClick={() => setOpen(false)}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-          >
-            <X size={18} /> Hide menu
-          </button>
-        </div>
-      )}
+      {/* Bottom: user profile */}
+      <div className="border-t border-white/10 p-3">
+        <Link
+          href="/settings"
+          title={user?.name ?? "Account settings"}
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-white/8",
+            !open && "justify-center"
+          )}
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#70D7C0] text-[17px] font-extrabold text-[#272047]">
+            {initial}
+          </span>
+          {open && (
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[14px] font-bold text-white">
+                {user?.name ?? "My account"}
+              </span>
+                <span className="block truncate text-[12px] text-white/55">
+                {user?.email ?? "View settings →"}
+              </span>
+            </span>
+          )}
+        </Link>
+      </div>
     </aside>
   );
 }

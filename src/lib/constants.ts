@@ -43,8 +43,8 @@ export const INCOME_CATEGORIES = [
 
 export const PAYMENT_STATUSES = [
   { value: "paid", label: "Paid" },
-  { value: "pending", label: "Pending" },
   { value: "credit", label: "Credit" },
+  { value: "interested", label: "Interested" },
 ] as const;
 
 export const PAYMENT_METHODS = [
@@ -56,7 +56,7 @@ export const PAYMENT_METHODS = [
 ] as const;
 
 export type TransactionType = "income" | "expense";
-export type PaymentStatus = "paid" | "pending" | "credit";
+export type PaymentStatus = "paid" | "credit" | "interested" | "pending";
 export type TransactionSource = "manual" | "ocr";
 export type ScanStatus = "processing" | "completed" | "needs_review" | "failed";
 
@@ -144,10 +144,10 @@ export interface ScannedRecord {
 }
 
 export const SUGGESTED_QUESTIONS = [
-  "How much did I make this month?",
-  "Where did I spend the most money?",
-  "What were my biggest expenses?",
   "How much am I owed?",
-  "What did I sell the most this month?",
-  "Compare my income this month with last month.",
+  "Who is on credit?",
+  "Who is interested but has not paid?",
+  "Who converted to a paid customer?",
+  "Who needs a follow-up?",
+  "Record Chidi as interested in Ankara for ₦25,000",
 ];

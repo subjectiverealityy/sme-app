@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { Menu, Plus, ScanLine, Sparkles, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign, Menu, MessageCircle, ShieldCheck, UserPlus } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { Card, EmptyState, Skeleton } from "@/components/ui";
-import { AddFab } from "@/components/AddFab";
+import { EmptyState, Skeleton } from "@/components/ui";
+import { getCustomers, getPeopleStats, followUpLabel, initials, type CustomerSummary } from "@/lib/customers";
 import { useSidebar } from "@/components/Nav";
 import { filterByPreset, summarize, dailySeries } from "@/lib/finance";
 import { formatDate, formatNaira, greetingForHour } from "@/lib/utils";
 import { brokenPromises, buildDebtReport, longDate } from "@/lib/collections";
 
-function PageHeader({ name, businessName }: { name: string; businessName?: string }) {
+function PageHeader({ name, businessName, action }: { name: string; businessName?: string; action?: React.ReactNode }) {
   const { open, setOpen } = useSidebar();
   const initial = (name || "B").charAt(0).toUpperCase();
   return (
@@ -29,8 +29,8 @@ function PageHeader({ name, businessName }: { name: string; businessName?: strin
         {initial}
       </div>
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-[20px] font-extrabold leading-tight md:text-[24px]">
-          {greetingForHour()}, {name} 👋
+        <h1 className="truncate text-[22px] font-extrabold leading-tight text-[#272047] md:text-[28px]">
+          {greetingForHour()}, {name}.
         </h1>
         {businessName && (
           <span className="mt-0.5 inline-block max-w-full truncate rounded-full bg-mint-light px-2.5 py-0.5 text-[12px] font-bold text-ink">
@@ -71,6 +71,10 @@ export default function DashboardPage() {
 
   const maxVal = Math.max(1, ...series.flatMap((s) => [s.income, s.expense]));
   const firstName = (user?.name || "there").split(" ")[0];
+  const customers = useMemo(() => getCustomers(transactions), [transactions]);
+  const peopleStats = useMemo(() => getPeopleStats(customers), [customers]);
+  const followUps = useMemo(() => customers.filter((c) => c.followUp === "overdue" || c.followUp === "due-today").slice(0, 3), [customers]);
+  const largestBalances = useMemo(() => customers.filter((c) => c.outstanding > 0).slice(0, 3), [customers]);
 
   if (loading) {
     return (
@@ -320,3 +324,8 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+function MetricCard({ label, value, detail, tone, icon }: { label: string; value: string; detail: string; tone: "navy" | "mint" | "coral"; icon: React.ReactNode }) { const styles = { navy: "bg-[#29224e] text-white", mint: "bg-[#70d7c0] text-[#272047]", coral: "bg-[#f69a72] text-[#272047]" }; return <div className={`rounded-2xl p-4 ${styles[tone]}`}><div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.12em] opacity-75"><span>{label}</span>{icon}</div><p className="mt-3 text-[22px] font-extrabold tracking-tight">{value}</p><p className="mt-1 text-[10px] opacity-70">{detail}</p></div>; }
+function SectionHeading({ icon, title, subtitle, href }: { icon: React.ReactNode; title: string; subtitle: string; href: string }) { return <div className="flex items-start justify-between"><div><h2 className="flex items-center gap-2 text-[14px] font-extrabold">{title}<span className="text-[#8e8994]">{icon}</span></h2><p className="mt-1 text-[11px] text-[#8e8994]">{subtitle}</p></div><Link href={href} aria-label={`View ${title}`} className="text-[#8e8994] transition hover:text-[#272047]"><ChevronRight size={16} /></Link></div>; }
+function CaughtUp() { return <div className="flex min-h-[142px] flex-col items-center justify-center text-center"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#70d7c0] text-[#272047]"><Check size={17} /></span><p className="mt-3 text-[12px] font-extrabold">You are all caught up</p><p className="mt-1 max-w-[220px] text-[11px] leading-5 text-[#8e8994]">New promises will appear here on the day they are due.</p></div>; }
+function EmptyDebtorState() { return <div className="mt-6 rounded-2xl border border-[#e9e3da] bg-white p-8 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#70d7c0] text-[#272047]"><ShieldCheck size={23} /></div><h2 className="mt-3 text-[18px] font-extrabold text-[#272047]">Your debtor list starts here.</h2><p className="mx-auto mt-1 max-w-[300px] text-[12px] leading-5 text-[#8e8994]">Add a debtor to keep every balance, status, and promise visible.</p><Link href="/transactions/new" className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#29224e] px-5 py-3 text-[13px] font-bold text-white transition hover:bg-[#3b3267]">Add your first debtor <ChevronRight size={15} /></Link></div>; }
