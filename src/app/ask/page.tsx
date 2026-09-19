@@ -113,6 +113,10 @@ export default function AskPage() {
   async function savePending() {
     if (!pending || saving) return;
     if (!pending.description.trim() || !(pending.amount > 0)) return;
+    if (!pending.customer_or_vendor?.trim()) {
+      setSaveError("Add the person's name before saving this debtor.");
+      return;
+    }
     setSaving(true);
     setSaveError("");
     try {

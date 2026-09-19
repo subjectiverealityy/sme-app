@@ -44,6 +44,11 @@ function diffDays(a: string, b: string): number {
   return Math.round(ms / 86400000);
 }
 
+function effectiveStatus(transaction: Transaction): string {
+  if (transaction.notes?.includes("[credyt:interested]")) return "interested";
+  return transaction.payment_status === "pending" ? "credit" : transaction.payment_status;
+}
+
 /** Group income transactions by customer into per-person summaries. */
 export function getCustomers(transactions: Transaction[]): CustomerSummary[] {
   const map = new Map<string, CustomerSummary>();
@@ -79,7 +84,7 @@ export function getCustomers(transactions: Transaction[]): CustomerSummary[] {
     c.totalBought += amt;
     c.txnCount += 1;
     c.txns.push(t);
-    const status = t.payment_status === "pending" ? "credit" : t.payment_status;
+    const status = effectiveStatus(t);
     if (status === "paid") {
       c.totalPaid += amt;
     } else if (status === "credit") {

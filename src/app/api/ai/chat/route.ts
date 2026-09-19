@@ -66,9 +66,14 @@ function parseRecordIntent(question: string): RecordDraft | null {
       ? "credit"
       : "paid";
   const personMatch = q.match(/\b(?:from|to|for)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z.]+){0,2})/);
-  const customer = personMatch && !/^(today|yesterday|this|last|the|my|a|an)\b/i.test(personMatch[1]) ? personMatch[1].trim() : undefined;
+  const recordPersonMatch = q.match(/\b(?:record|add)\s+([A-Za-z][a-z]+(?:\s+[A-Za-z][a-z.]+){0,2})\s+(?=as\b|is\b|for\b)/i);
+  const customerCandidate = recordPersonMatch?.[1] ?? personMatch?.[1];
+  const customer = customerCandidate && !/^(today|yesterday|this|last|the|my|a|an)\b/i.test(customerCandidate)
+    ? customerCandidate.trim()
+    : undefined;
   let description = q.replace(amountMatch[0], "").replace(/\b(record|add|log|save|interested|considering|potential|credit|owe|owes|owed|unpaid|paid|promise|will pay)\b/gi, "");
   if (personMatch) description = description.replace(personMatch[0], "");
+  if (recordPersonMatch) description = description.replace(recordPersonMatch[0], "");
   description = description.replace(/\s+/g, " ").trim().slice(0, 80) || "Product or service";
   return { type: "income", description, amount: Math.round(amount), category: "Sales", payment_status: status, customer_or_vendor: customer };
 }
