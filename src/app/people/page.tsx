@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Eye, MessageCircle } from "lucide-react";
+import { CheckCircle2, Eye, MessageCircle, Pencil } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { Card, EmptyState, Input, Skeleton } from "@/components/ui";
 import { AddFab } from "@/components/AddFab";
@@ -12,9 +12,10 @@ import { formatDate, formatNaira } from "@/lib/utils";
 type StatusFilter = "all" | "paid" | "credit" | "interested";
 
 export default function PeoplePage() {
-  const { transactions, loading } = useStore();
+  const { transactions, loading, updateTransaction } = useStore();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
+  const [paying, setPaying] = useState<string | null>(null);
 
   const customers = useMemo(() => getCustomers(transactions), [transactions]);
   const stats = useMemo(() => getPeopleStats(customers), [customers]);
@@ -42,6 +43,17 @@ export default function PeoplePage() {
       ? nudgeText(customer.name, customer.outstanding, "my business")
       : interestedText(customer.name, customer.txns[0]?.description ?? "the item we discussed", "my business");
     return waLink(customer.phone, message);
+  }
+
+  async function markPaid(customer: (typeof customers)[number]) {
+    const creditRecords = customer.txns.filter((t) => t.payment_status === "credit" || (t.payment_status === "pending" && !t.notes?.includes("[credyt:interested]")));
+    if (creditRecords.length === 0 || paying) return;
+    setPaying(customer.key);
+    try {
+      await Promise.all(creditRecords.map((t) => updateTransaction(t.id, { payment_status: "paid" })));
+    } finally {
+      setPaying(null);
+    }
   }
 
   if (loading) {
@@ -141,7 +153,9 @@ export default function PeoplePage() {
                       <td className="px-4 py-3 text-gray-600">{c.outstanding > 0 ? followUpLabel(c) : formatDate(c.lastDate)}</td>
                       <td className="px-4 py-3"><span className="flex justify-end gap-1.5">
                         <Link href={`/people/${encodeURIComponent(normalizeName(c.name))}`} title="View details" aria-label={`View ${c.name}`} className="inline-flex items-center gap-1.5 rounded-lg p-2 text-gray-500 hover:bg-[#d9f5ed] hover:text-[#272047]"><Eye size={17} /><span className="hidden xl:inline text-[12px] font-bold">View</span></Link>
+                        {c.txns[0] && <Link href={`/transactions/${c.txns[0].id}?edit=1`} title="Edit debtor record" aria-label={`Edit ${c.name}`} className="inline-flex items-center gap-1.5 rounded-lg p-2 text-gray-500 hover:bg-[#d9f5ed] hover:text-[#272047]"><Pencil size={17} /><span className="hidden xl:inline text-[12px] font-bold">Edit</span></Link>}
                         {reminder ? <a href={reminder} target="_blank" rel="noopener noreferrer" title="Send WhatsApp reminder" aria-label={`Remind ${c.name} on WhatsApp`} className="inline-flex items-center gap-1.5 rounded-lg bg-[#d9f5ed] p-2 text-[#0b938e] hover:bg-[#bfeee2]"><MessageCircle size={17} /><span className="hidden xl:inline text-[12px] font-bold">Remind</span></a> : <span title="Add a phone number to remind" className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg bg-gray-100 p-2 text-gray-300"><MessageCircle size={17} /><span className="hidden xl:inline text-[12px] font-bold">Remind</span></span>}
+                        {status === "Credit" && <button onClick={() => markPaid(c)} disabled={paying === c.key} title="Mark all credit records as paid" aria-label={`Mark ${c.name} as paid`} className="inline-flex items-center gap-1.5 rounded-lg bg-[#29224e] p-2 text-white hover:bg-[#3b3267] disabled:opacity-50"><CheckCircle2 size={17} /><span className="hidden xl:inline text-[12px] font-bold">{paying === c.key ? "Saving" : "Paid"}</span></button>}
                       </span></td>
                     </tr>
                   );

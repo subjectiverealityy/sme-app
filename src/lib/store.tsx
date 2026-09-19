@@ -169,25 +169,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const supabase = getSupabaseBrowser()!;
       // NOTE: id/created_at are omitted — Postgres generates UUIDs via gen_random_uuid().
       // Sending a text id like "txn_xxx" to a uuid column causes 400 Bad Request.
-      const { data, error } = await supabase
+      const compatibilityInterested = t.payment_status === "interested";
+      const payload = {
+        business_id: business.id,
+        type: t.type,
+        description: t.description,
+        amount: t.amount,
+        category: t.category,
+        transaction_date: t.transaction_date,
+        payment_status: compatibilityInterested ? "pending" : t.payment_status,
+        payment_method: t.payment_method ?? null,
+        customer_or_vendor: t.customer_or_vendor ?? null,
+        customer_phone: t.customer_phone ?? null,
+        due_date: t.due_date ?? null,
+        notes: compatibilityInterested ? `${t.notes ?? ""} [credyt:interested]`.trim() : t.notes ?? null,
+        source: t.source,
+      };
+      let { data, error } = await supabase
         .from("transactions")
-        .insert({
-          business_id: business.id,
-          type: t.type,
-          description: t.description,
-          amount: t.amount,
-          category: t.category,
-          transaction_date: t.transaction_date,
-          payment_status: t.payment_status,
-          payment_method: t.payment_method ?? null,
-          customer_or_vendor: t.customer_or_vendor ?? null,
-          customer_phone: t.customer_phone ?? null,
-          due_date: t.due_date ?? null,
-          notes: t.notes ?? null,
-          source: t.source,
-        })
+        .insert(payload)
         .select()
         .single();
+      if (data && compatibilityInterested) data = { ...data, payment_status: "interested" };
       if (error) throw error;
       const next = [data as Transaction, ...transactions];
       setTransactions(next);
