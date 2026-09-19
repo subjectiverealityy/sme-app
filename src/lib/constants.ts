@@ -1,0 +1,106 @@
+export const BRAND = {
+  primary: "#167C5A",
+  dark: "#0F5132",
+  mint: "#DDF5EA",
+  bg: "#F8FAF9",
+  ink: "#17221D",
+} as const;
+
+export const BUSINESS_CATEGORIES = [
+  "Retail",
+  "Food & Catering",
+  "Fashion",
+  "Transportation",
+  "Professional Services",
+  "Beauty & Personal Care",
+  "Agriculture",
+  "Manufacturing",
+  "Other",
+] as const;
+
+export const EXPENSE_CATEGORIES = [
+  "Inventory / Stock",
+  "Transportation",
+  "Salaries",
+  "Rent",
+  "Utilities",
+  "Marketing",
+  "Equipment",
+  "Food",
+  "Packaging",
+  "Internet / Data",
+  "Taxes",
+  "Other",
+] as const;
+
+export const INCOME_CATEGORIES = [
+  "Sales",
+  "Services",
+  "Catering Order",
+  "Freelance",
+  "Other",
+] as const;
+
+export const PAYMENT_STATUSES = [
+  { value: "paid", label: "Paid" },
+  { value: "pending", label: "Pending" },
+  { value: "credit", label: "Credit" },
+] as const;
+
+export const PAYMENT_METHODS = [
+  "Cash",
+  "Bank Transfer",
+  "POS",
+  "Card",
+  "Other",
+] as const;
+
+export type TransactionType = "income" | "expense";
+export type PaymentStatus = "paid" | "pending" | "credit";
+export type TransactionSource = "manual" | "ocr";
+export type ScanStatus = "processing" | "completed" | "needs_review" | "failed";
+
+export interface Business {
+  id: string;
+  owner_id: string;
+  name: string;
+  category: string;
+  phone: string;
+  location: string;
+  description?: string;
+  created_at: string;
+}
+
+export interface Transaction {
+  id: string;
+  business_id: string;
+  type: TransactionType;
+  description: string;
+  amount: number; // Naira, stored as integer kobo? For MVP store Naira number
+  category: string;
+  transaction_date: string; // ISO date
+  payment_status: PaymentStatus;
+  payment_method?: string;
+  customer_or_vendor?: string;
+  notes?: string;
+  source: TransactionSource;
+  created_at: string;
+}
+
+export interface ScannedRecord {
+  id: string;
+  business_id: string;
+  image_url?: string;
+  status: ScanStatus;
+  extracted_data: Partial<Transaction> | Partial<Transaction>[] | Record<string, unknown> | null;
+  created_at: string;
+}
+
+export const SUGGESTED_QUESTIONS = [
+  "How much did I make this month?",
+  "Where did I spend the most money?",
+  "What were my biggest expenses?",
+  "How much am I owed?",
+  "What did I sell the most this month?",
+  "Compare my income this month with last month.",
+];
