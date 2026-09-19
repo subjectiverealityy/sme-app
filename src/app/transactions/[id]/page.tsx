@@ -61,41 +61,46 @@ function DetailInner() {
   return (
     <div className="py-4 animate-fade-up">
       <Link href="/transactions" className="text-[14px] font-bold text-[#167C5A]">← All records</Link>
-      <Card className="mt-3">
-        <div className="flex items-center justify-between">
-          <Badge tone={txn.type === "income" ? "green" : "red"}>{txn.type === "income" ? "Money in" : "Money out"}</Badge>
-          <Badge tone={txn.payment_status === "paid" ? "green" : txn.payment_status === "pending" ? "amber" : "red"}>{txn.payment_status}</Badge>
-        </div>
-        <h1 className="mt-2 text-[22px] font-extrabold">{txn.description}</h1>
-        <p className={`text-[28px] font-extrabold ${txn.type === "income" ? "text-[#167C5A]" : "text-red-600"}`}>
-          {txn.type === "income" ? "+" : "−"}{formatNaira(txn.amount)}
-        </p>
-        <dl className="mt-4 space-y-2.5 text-[14px]">
-          {[
-            ["Date", formatDate(txn.transaction_date)],
-            ["Category", txn.category],
-            ["Payment method", txn.payment_method ?? "—"],
-            [(txn.type === "income" ? "Customer" : "Vendor"), txn.customer_or_vendor ?? "—"],
-            ["Notes", txn.notes || "—"],
-            ["Source", txn.source === "ocr" ? "Scanned 📷" : "Added by hand ✍️"],
-          ].map(([k, v]) => (
-            <div key={k} className="flex justify-between gap-4 border-b border-gray-50 pb-2">
-              <dt className="text-gray-500">{k}</dt>
-              <dd className="text-right font-semibold">{v}</dd>
-            </div>
-          ))}
-        </dl>
-        {!editing && (
+
+      {!editing && (
+        <Card className="mt-3">
+          <div className="flex items-center justify-between">
+            <Badge tone={txn.type === "income" ? "green" : "red"}>{txn.type === "income" ? "Money in" : "Money out"}</Badge>
+            <Badge tone={txn.payment_status === "paid" ? "green" : txn.payment_status === "pending" ? "amber" : "red"}>{txn.payment_status}</Badge>
+          </div>
+          <h1 className="mt-2 text-[22px] font-extrabold">{txn.description}</h1>
+          <p className={`text-[28px] font-extrabold ${txn.type === "income" ? "text-[#167C5A]" : "text-red-600"}`}>
+            {txn.type === "income" ? "+" : "−"}{formatNaira(txn.amount)}
+          </p>
+          <dl className="mt-4 space-y-2.5 text-[14px]">
+            {[
+              ["Date", formatDate(txn.transaction_date)],
+              ["Category", txn.category],
+              ["Payment method", txn.payment_method ?? "—"],
+              [(txn.type === "income" ? "Customer" : "Vendor"), txn.customer_or_vendor ?? "—"],
+              ["Notes", txn.notes || "—"],
+              ["Source", txn.source === "ocr" ? "Scanned 📷" : "Added by hand ✍️"],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-4 border-b border-gray-50 pb-2">
+                <dt className="text-gray-500">{k}</dt>
+                <dd className="text-right font-semibold">{v}</dd>
+              </div>
+            ))}
+          </dl>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <Button variant="outline" onClick={startEdit}>Edit</Button>
             <Button variant="danger" onClick={() => setConfirmDel(true)}>Delete</Button>
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
       {editing && (
         <Card className="mt-3">
-          <div className="flex flex-col gap-3">
+          <h2 className="text-[18px] font-extrabold">Edit transaction ✏️</h2>
+          <p className="text-[13px] text-gray-500">
+            {txn.type === "income" ? "Money in" : "Money out"} · {formatNaira(txn.amount)}
+          </p>
+          <div className="mt-3 flex flex-col gap-3">
             <Input label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             <Input label="Amount (₦)" inputMode="numeric" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
             <Select label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>

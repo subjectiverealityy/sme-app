@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store";
-import { Badge, Card, EmptyState, Input, Select, Skeleton } from "@/components/ui";
+import { EmptyState, Input, Select, Skeleton } from "@/components/ui";
+import { TxnTable } from "@/components/TxnTable";
 import { AddFab } from "@/components/AddFab";
-import { formatDate, formatNaira } from "@/lib/utils";
 
 export default function TransactionsPage() {
   const { transactions, loading } = useStore();
@@ -76,28 +76,11 @@ export default function TransactionsPage() {
           />
         </div>
       ) : (
-        <div className="mt-3 flex flex-col gap-2">
-          {filtered.map((t) => (
-            <Link key={t.id} href={`/transactions/${t.id}`}>
-              <Card className="flex items-center gap-3 !p-3">
-                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg ${t.type === "income" ? "bg-[#DDF5EA]" : "bg-red-50"}`}>
-                  {t.type === "income" ? "💰" : "🧾"}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-bold">{t.description}</span>
-                  <span className="mt-0.5 flex items-center gap-2 text-[12px] text-gray-500">
-                    {formatDate(t.transaction_date)} · {t.category}
-                    <Badge tone={t.payment_status === "paid" ? "green" : t.payment_status === "pending" ? "amber" : "red"}>
-                      {t.payment_status}
-                    </Badge>
-                  </span>
-                </span>
-                <span className={`text-[15px] font-extrabold ${t.type === "income" ? "text-[#167C5A]" : "text-red-600"}`}>
-                  {t.type === "income" ? "+" : "−"}{formatNaira(t.amount)}
-                </span>
-              </Card>
-            </Link>
-          ))}
+        <div className="mt-3">
+          <p className="mb-2 text-[13px] text-gray-500">
+            Showing <b>{filtered.length}</b> of <b>{transactions.length}</b> records
+          </p>
+          <TxnTable transactions={filtered} />
         </div>
       )}
       <AddFab />
