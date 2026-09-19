@@ -1,8 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ParsedReply } from "@/lib/collections";
-import { finalizeParsedReply } from "@/lib/collections";
+import { extractNairaAmount, parseReplyLocal, promisedDateFromText } from "@/lib/collections";
 import { groq, hasGroqKey } from "@/lib/groq";
 import { getSupabaseServer } from "@/lib/supabase/server";
+
+/** Deterministic finalization — money/dates ALWAYS come from the text, never
+ *  the model. The model may only pin the intent (and a validated future date
+ *  when the text has no explicit hint), while confidence drops when the model
+ *  disagrees with the local parser. */
+function finalizeReply(text: string, model?: Partial<ParsedReply>): ParsedReply {
+  const local = parseReplyLocal(text);
+  const money = extractNairaAmount(text);
+  const modelIntent = model?.intent ? model.intent : null;
+  const intent = modelIntent ?? local.intent;
+  const agrees = !modelIntent || modelIntent === local.intent;
+
+  let promised_date: string | null = null;
+  if (intent === "promise_to_pay" || intent === "part_payment") {
+    const hint = promisedDateFromText(text);
+    const modelDate =
+      typeof model?.promised_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(model.promised_date)
+        ? model.promised_date
+        : null;
+    promised_date = hint ?? modelDate ?? null;
+  }
+
+  const confidence =
+    typeof model?.confidence === "number" && Number.isFinite(model.confidence)
+      ? Math.min(model.confidence, agrees ? 1 : 0.7)
+      : agrees
+        ? 0.85
+        : 0.5;
+
+  return {
+    intent,
+    promised_date,
+    amount_mentioned: money ?? (typeof model?.amount_mentioned === "number" ? model.amount_mentioned : null),
+    confidence,
+    quote: typeof model?.quote === "string" ? model.quote.slice(0, 60) : "",
+  };
+}
 
 const SYSTEM = `You are a debt-collection assistant for a small Nigerian business. A customer answered a reminder through a reply link. Return ONLY a JSON object:
 { "intent": "promise_to_pay" | "part_payment" | "paid_claim" | "dispute" | "none", "promised_date": "YYYY-MM-DD or null", "amount_mentioned": integer or null, "quote": "short exact quote from the text" }
@@ -40,7 +77,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid reply code." }, { status: 400 });
   }
 
-  const parsed = finalizeParsedReply(text);
+  const parsed = finalizeReply(text);
   if (hasGroqKey()) {
     try {
       const raw = await groq(
@@ -51,7 +88,7 @@ export async function POST(req: NextRequest) {
         { json: true, temperature: 0, maxTokens: 400 }
       );
       const modelGuess = safeParse(raw);
-      if (modelGuess) Object.assign(parsed, finalizeParsedReply(text, modelGuess));
+      if (modelGuess) Object.assign(parsed, finalizeReply(text, modelGuess));
     } catch (e) {
       console.error("owed-reply groq failed:", e);
     }
