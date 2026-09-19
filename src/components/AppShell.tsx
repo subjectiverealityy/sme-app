@@ -20,6 +20,8 @@ function AppFrame({ children }: { children: React.ReactNode }) {
     pathname === "/first-transaction" ||
     pathname === "/success" ||
     pathname === "/transactions/new" ||
+    pathname === "/owed/queue" ||
+    (pathname?.startsWith("/owed/") && pathname !== "/owed") ||
     (pathname?.startsWith("/transactions/") && pathname !== "/transactions");
   return (
     <>

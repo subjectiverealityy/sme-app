@@ -16,6 +16,7 @@ export default function BusinessPage() {
     phone: business?.phone ?? "",
     location: business?.location ?? "",
     description: business?.description ?? "",
+    payment_details: business?.payment_details ?? "",
   });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -58,6 +59,7 @@ export default function BusinessPage() {
         <Input label="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         <Input label="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
         <Textarea label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <Input label="Payment account (appears on reminders)" hint="e.g. GTB 0123456789 (Adeola) — optional" value={form.payment_details ?? ""} onChange={(e) => setForm({ ...form, payment_details: e.target.value })} />
         {msg && <p className="rounded-xl bg-[#DDF5EA] px-4 py-2 text-[14px] text-[#0F5132]">{msg}</p>}
         <Button disabled={loading} onClick={save}>{loading ? "Saving…" : "Save changes"}</Button>
       </Card>

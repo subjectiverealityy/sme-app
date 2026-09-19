@@ -132,6 +132,121 @@ create policy "scan_owner_update" on public.scanned_records for update using (
 -- on conflict do nothing;
 -- create policy "scans_owner" on storage.objects for all using (bucket_id='scans' and auth.uid()::text = (storage.foldername(name))[1]) with check (bucket_id='scans' and auth.uid()::text = (storage.foldername(name))[1]);
 
+-- ============================================================
+-- Collections ("Who Owes Me") — phase 1
+-- ============================================================
+
+-- Businesses can store payment details (account no / bank) shown in reminders
+alter table public.businesses add column if not exists payment_details text;
+
+-- Each debt-bearing transaction can carry a reminder language preference
+alter table public.transactions add column if not exists reminder_language text not null default 'english' check (reminder_language in ('english','pidgin'));
+
+-- Part payments reduce a debt's balance without touching the original record
+create table if not exists public.debt_payments (
+  id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references public.businesses(id) on delete cascade,
+  transaction_id uuid not null references public.transactions(id) on delete cascade,
+  amount numeric(14,2) not null check (amount > 0),
+  method text,
+  notes text,
+  paid_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+create index if not exists idx_debt_payments_business on public.debt_payments(business_id);
+create index if not exists idx_debt_payments_txn on public.debt_payments(transaction_id);
+
+-- Reminder log. Only logged when the user confirms they actually sent it.
+create table if not exists public.debt_reminders (
+  id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references public.businesses(id) on delete cascade,
+  transaction_id uuid not null references public.transactions(id) on delete cascade,
+  debtor_name text,
+  debtor_phone text,
+  stage integer not null default 1,
+  language text not null default 'english' check (language in ('english','pidgin')),
+  message text,
+  status text not null default 'sent' check (status in ('sent','skipped')),
+  sent_at timestamptz default now(),
+  created_at timestamptz default now()
+);
+create index if not exists idx_debt_reminders_business on public.debt_reminders(business_id);
+create index if not exists idx_debt_reminders_txn on public.debt_reminders(transaction_id);
+
+-- Captured replies (pasted text / screenshot tx / exported chat) + AI intent.
+-- status: draft → user confirmed → status 'confirmed'; dismissed when rejected.
+create table if not exists public.debt_replies (
+  id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references public.businesses(id) on delete cascade,
+  transaction_id uuid not null references public.transactions(id) on delete cascade,
+  raw_text text,
+  raw_file_type text,
+  intent text check (intent in ('promise_to_pay','dispute','part_payment','paid_claim','none')),
+  promised_date date,
+  amount_mentioned numeric(14,2),
+  confidence numeric(3,2) default 0,
+  quote text,
+  status text not null default 'draft' check (status in ('draft','confirmed','dismissed')),
+  created_at timestamptz default now()
+);
+create index if not exists idx_debt_replies_business on public.debt_replies(business_id);
+create index if not exists idx_debt_replies_txn on public.debt_replies(transaction_id);
+
+-- RLS
+alter table public.debt_payments enable row level security;
+alter table public.debt_reminders enable row level security;
+alter table public.debt_replies enable row level security;
+
+-- debt_payments
+drop policy if exists "debtpay_owner_select" on public.debt_payments;
+create policy "debtpay_owner_select" on public.debt_payments for select using (
+  exists (select 1 from public.businesses b where b.id = debt_payments.business_id and b.owner_id = auth.uid())
+);
+drop policy if exists "debtpay_owner_insert" on public.debt_payments;
+create policy "debtpay_owner_insert" on public.debt_payments for insert with check (
+  exists (select 1 from public.businesses b where b.id = debt_payments.business_id and b.owner_id = auth.uid())
+);
+drop policy if exists "debtpay_owner_update" on public.debt_payments;
+create policy "debtpay_owner_update" on public.debt_payments for update using (
+  exists (select 1 from public.businesses b where b.id = debt_payments.business_id and b.owner_id = auth.uid())
+);
+drop policy if exists "debtpay_owner_delete" on public.debt_payments;
+create policy "debtpay_owner_delete" on public.debt_payments for delete using (
+  exists (select 1 from public.businesses b where b.id = debt_payments.business_id and b.owner_id = auth.uid())
+);
+
+-- debt_reminders
+drop policy if exists "debtrem_owner_select" on public.debt_reminders;
+create policy "debtrem_owner_select" on public.debt_reminders for select using (
+  exists (select 1 from public.businesses b where b.id = debt_reminders.business_id and b.owner_id = auth.uid())
+);
+drop policy if exists "debtrem_owner_insert" on public.debt_reminders;
+create policy "debtrem_owner_insert" on public.debt_reminders for insert with check (
+  exists (select 1 from public.businesses b where b.id = debt_reminders.business_id and b.owner_id = auth.uid())
+);
+drop policy if exists "debtrem_owner_delete" on public.debt_reminders;
+create policy "debtrem_owner_delete" on public.debt_reminders for delete using (
+  exists (select 1 from public.businesses b where b.id = debt_reminders.business_id and b.owner_id = auth.uid())
+);
+
+-- debt_replies
+drop policy if exists "debtrep_owner_select" on public.debt_replies;
+create policy "debtrep_owner_select" on public.debt_replies for select using (
+  exists (select 1 from public.businesses b where b.id = debt_replies.business_id and b.owner_id = auth.uid())
+);
+drop policy if exists "debtrep_owner_insert" on public.debt_replies;
+create policy "debtrep_owner_insert" on public.debt_replies for insert with check (
+  exists (select 1 from public.businesses b where b.id = debt_replies.business_id and b.owner_id = auth.uid())
+);
+drop policy if exists "debtrep_owner_update" on public.debt_replies;
+create policy "debtrep_owner_update" on public.debt_replies for update using (
+  exists (select 1 from public.businesses b where b.id = debt_replies.business_id and b.owner_id = auth.uid())
+);
+drop policy if exists "debtrep_owner_delete" on public.debt_replies;
+create policy "debtrep_owner_delete" on public.debt_replies for delete using (
+  exists (select 1 from public.businesses b where b.id = debt_replies.business_id and b.owner_id = auth.uid())
+);
+
 -- Seed default categories (system, business_id null)
 insert into public.categories (business_id, name, type) values
   (null, 'Sales', 'income'), (null, 'Services', 'income'), (null, 'Other', 'income'),

@@ -156,9 +156,9 @@ export default function DashboardPage() {
       </div>
 
       {summary.owedToYou > 0 && (
-        <Link href="/transactions">
+        <Link href="/owed">
           <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-[14px] transition hover:shadow-sm">
-            💛 <b>Money you&apos;re owed:</b> {formatNaira(summary.owedToYou)} <span className="font-bold text-[#167C5A]">→ follow up</span>
+            💛 <b>Money you&apos;re owed:</b> {formatNaira(summary.owedToYou)} <span className="font-bold text-[#167C5A]">→ send reminders</span>
           </div>
         </Link>
       )}
@@ -253,6 +253,15 @@ export default function DashboardPage() {
         <div>
           <h2 className="font-extrabold">What next?</h2>
           <div className="mt-2 flex flex-col gap-2">
+            <Link href="/owed">
+              <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-xl">💛</span>
+                <span>
+                  <span className="block text-[14px] font-bold">Who owes me</span>
+                  <span className="block text-[12px] text-gray-500">Send WhatsApp reminders</span>
+                </span>
+              </Card>
+            </Link>
             <Link href="/scan">
               <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-xl">📷</span>

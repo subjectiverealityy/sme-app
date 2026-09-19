@@ -8,7 +8,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import type { Business, ScannedRecord, Transaction } from "./constants";
+import type { Business, ScannedRecord, Transaction, DebtPayment, DebtReminder, DebtReply, ReminderStatus } from "./constants";
 import { getSupabaseBrowser, isSupabaseConfigured } from "./supabase/client";
 import { sampleBusiness, sampleTransactions, sampleScans } from "./sample";
 import { uid } from "./utils";
@@ -25,6 +25,9 @@ interface StoreState {
   business: Business | null;
   transactions: Transaction[];
   scans: ScannedRecord[];
+  debtPayments: DebtPayment[];
+  debtReminders: DebtReminder[];
+  debtReplies: DebtReply[];
   loading: boolean;
   useDemo: boolean;
   setUser: (u: DemoUser | null) => void;
@@ -33,6 +36,10 @@ interface StoreState {
   updateTransaction: (id: string, patch: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   addScan: (s: Omit<ScannedRecord, "id" | "created_at" | "business_id"> & { business_id?: string }) => Promise<ScannedRecord>;
+  addPayment: (input: { transaction_id: string; amount: number; method?: string; notes?: string }) => Promise<DebtPayment>;
+  logReminder: (input: Omit<DebtReminder, "id" | "business_id" | "created_at" | "sent_at" | "status"> & { status?: ReminderStatus }) => Promise<DebtReminder>;
+  saveReply: (r: Omit<DebtReply, "id" | "business_id" | "created_at">) => Promise<DebtReply>;
+  setReplyStatus: (id: string, status: DebtReply["status"]) => Promise<void>;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -43,6 +50,9 @@ const LS_USER = "ledgerly_user";
 const LS_BIZ = "ledgerly_business";
 const LS_TXN = "ledgerly_txns";
 const LS_SCAN = "ledgerly_scans";
+const LS_PAYMENTS = "ledgerly_payments";
+const LS_REMINDERS = "ledgerly_reminders";
+const LS_REPLIES = "ledgerly_replies";
 
 function readLS<T>(key: string): T | null {
   try {
@@ -60,12 +70,24 @@ function writeLS(key: string, val: unknown) {
   }
 }
 
+function debtPaidInFull(transactionId: string, txns: Transaction[], payments: DebtPayment[]): boolean {
+  const txn = txns.find((t) => t.id === transactionId);
+  if (!txn) return true;
+  const total = payments
+    .filter((p) => p.transaction_id === transactionId)
+    .reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  return total >= Number(txn.amount);
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<DemoUser | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<{ id: string; email?: string } | null>(null);
   const [business, setBusinessState] = useState<Business | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [scans, setScans] = useState<ScannedRecord[]>([]);
+  const [debtPayments, setDebtPayments] = useState<DebtPayment[]>([]);
+  const [debtReminders, setDebtReminders] = useState<DebtReminder[]>([]);
+  const [debtReplies, setDebtReplies] = useState<DebtReply[]>([]);
   const [loading, setLoading] = useState(true);
 
   const useDemo = !isSupabaseConfigured();
@@ -107,6 +129,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setBusinessState(b);
         setTransactions(txns ?? []);
         setScans(sc ?? []);
+        setDebtPayments(readLS<DebtPayment[]>(LS_PAYMENTS) ?? []);
+        setDebtReminders(readLS<DebtReminder[]>(LS_REMINDERS) ?? []);
+        setDebtReplies(readLS<DebtReply[]>(LS_REPLIES) ?? []);
       } else {
         const supabase = getSupabaseBrowser()!;
         const { data } = await supabase.auth.getUser();
@@ -141,6 +166,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
               .limit(50);
             setScans((sc as ScannedRecord[]) ?? []);
           }
+          const { data: payments } = await supabase
+            .from("debt_payments")
+            .select("*")
+            .eq("business_id", (biz as Business).id)
+            .order("paid_at", { ascending: false })
+            .limit(2000);
+          setDebtPayments((payments as DebtPayment[]) ?? []);
+          const { data: reminders } = await supabase
+            .from("debt_reminders")
+            .select("*")
+            .eq("business_id", (biz as Business).id)
+            .order("sent_at", { ascending: false })
+            .limit(2000);
+          setDebtReminders((reminders as DebtReminder[]) ?? []);
+          const { data: replies } = await supabase
+            .from("debt_replies")
+            .select("*")
+            .eq("business_id", (biz as Business).id)
+            .order("created_at", { ascending: false })
+            .limit(500);
+          setDebtReplies((replies as DebtReply[]) ?? []);
         }
       }
     } finally {
@@ -222,6 +268,148 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [business, transactions, persistTxns]
   );
 
+  const addPayment: StoreState["addPayment"] = useCallback(
+    async ({ transaction_id, amount, method, notes }) => {
+      const bizId = (business?.id ?? "biz_demo") as string;
+      const record: DebtPayment = {
+        id: uid("pay"),
+        business_id: bizId,
+        transaction_id,
+        amount: Math.round(Number(amount) || 0),
+        method,
+        notes,
+        paid_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      };
+      const isLive = isSupabaseConfigured() && business?.id && business.id !== "biz_demo";
+      if (isLive) {
+        const supabase = getSupabaseBrowser()!;
+        const { data, error } = await supabase
+          .from("debt_payments")
+          .insert({
+            business_id: business!.id,
+            transaction_id,
+            amount: record.amount,
+            method: method ?? null,
+            notes: notes ?? null,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        record.id = (data as DebtPayment).id;
+      }
+      const next = [record, ...debtPayments];
+      setDebtPayments(next);
+      const settled = debtPaidInFull(transaction_id, transactions, next);
+      if (settled) {
+        if (isLive) {
+          const updateSupabase = getSupabaseBrowser()!;
+          await updateSupabase
+            .from("transactions")
+            .update({ payment_status: "paid" })
+            .eq("id", transaction_id);
+        }
+        persistTxns(
+          transactions.map((t) => (t.id === transaction_id ? { ...t, payment_status: "paid" } : t))
+        );
+      }
+      writeLS(LS_PAYMENTS, next);
+      return record;
+    },
+    [business, transactions, debtPayments, persistTxns]
+  );
+
+  const logReminder: StoreState["logReminder"] = useCallback(
+    async (input) => {
+      const now = new Date().toISOString();
+      const record: DebtReminder = {
+        ...input,
+        status: input.status ?? "sent",
+        sent_at: now,
+        id: uid("rem"),
+        business_id: (business?.id ?? "biz_demo") as string,
+        created_at: now,
+      };
+      const isLive = isSupabaseConfigured() && business?.id && business.id !== "biz_demo";
+      if (isLive) {
+        const supabase = getSupabaseBrowser()!;
+        const { data, error } = await supabase
+          .from("debt_reminders")
+          .insert({
+            business_id: business!.id,
+            transaction_id: record.transaction_id,
+            debtor_name: record.debtor_name,
+            debtor_phone: record.debtor_phone,
+            stage: record.stage,
+            language: record.language,
+            message: record.message,
+            status: record.status,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        record.id = (data as DebtReminder).id;
+      }
+      const next = [record, ...debtReminders];
+      setDebtReminders(next);
+      writeLS(LS_REMINDERS, next);
+      return record;
+    },
+    [business, debtReminders]
+  );
+
+  const saveReply: StoreState["saveReply"] = useCallback(
+    async (r) => {
+      const now = new Date().toISOString();
+      const record: DebtReply = {
+        ...r,
+        id: uid("rep"),
+        business_id: (business?.id ?? "biz_demo") as string,
+        created_at: now,
+      };
+      const isLive = isSupabaseConfigured() && business?.id && business.id !== "biz_demo";
+      if (isLive) {
+        const supabase = getSupabaseBrowser()!;
+        const { data, error } = await supabase
+          .from("debt_replies")
+          .insert({
+            business_id: business!.id,
+            transaction_id: record.transaction_id,
+            raw_text: record.raw_text,
+            raw_file_type: record.raw_file_type ?? null,
+            intent: record.intent,
+            promised_date: record.promised_date,
+            amount_mentioned: record.amount_mentioned,
+            confidence: record.confidence,
+            quote: record.quote,
+            status: record.status,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        record.id = (data as DebtReply).id;
+      }
+      const next = [record, ...debtReplies];
+      setDebtReplies(next);
+      writeLS(LS_REPLIES, next);
+      return record;
+    },
+    [business, debtReplies]
+  );
+
+  const setReplyStatus: StoreState["setReplyStatus"] = useCallback(
+    async (id, status) => {
+      if (isSupabaseConfigured() && business?.id && business.id !== "biz_demo") {
+        const supabase = getSupabaseBrowser()!;
+        await supabase.from("debt_replies").update({ status }).eq("id", id);
+      }
+      const next = debtReplies.map((r) => (r.id === id ? { ...r, status } : r));
+      setDebtReplies(next);
+      writeLS(LS_REPLIES, next);
+    },
+    [business, debtReplies]
+  );
+
   const addScan: StoreState["addScan"] = useCallback(
     async (s) => {
       const local: ScannedRecord = {
@@ -270,6 +458,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       business,
       transactions,
       scans,
+      debtPayments,
+      debtReminders,
+      debtReplies,
       loading,
       useDemo,
       setUser,
@@ -277,11 +468,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addTransaction,
       updateTransaction,
       deleteTransaction,
+      addPayment,
+      logReminder,
+      saveReply,
+      setReplyStatus,
       addScan,
       refresh,
       logout,
     }),
-    [user, supabaseUser, business, transactions, scans, loading, useDemo, setUser, setBusiness, addTransaction, updateTransaction, deleteTransaction, addScan, refresh, logout]
+    [user, supabaseUser, business, transactions, scans, debtPayments, debtReminders, debtReplies, loading, useDemo, setUser, setBusiness, addTransaction, updateTransaction, deleteTransaction, addPayment, logReminder, saveReply, setReplyStatus, addScan, refresh, logout]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
