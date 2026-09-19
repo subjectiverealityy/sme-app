@@ -105,10 +105,17 @@ If data is missing say you don't have enough records. Question: ${question}`;
 
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(context);
-    const text = result.response.text() || localAnswer(question, transactions);
-    return NextResponse.json({ answer: text, provider: "gemini" });
+    // Model is configurable via GEMINI_MODEL; gemini-1.5-flash was retired (404).
+    const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || "gemini-2.0-flash" });
+    try {
+      const result = await model.generateContent(context);
+      const text = result.response.text() || localAnswer(question, transactions);
+      return NextResponse.json({ answer: text, provider: "gemini" });
+    } catch (e) {
+      // Gemini call failed (bad model, quota, network) — fall back to computed answer
+      console.error("Gemini failed, using local answer:", e);
+      return NextResponse.json({ answer: localAnswer(question, transactions), provider: "local-fallback" });
+    }
   } catch (e) {
     console.error(e);
     return NextResponse.json({ answer: "AI is unavailable right now. Try again shortly." }, { status: 500 });

@@ -1,21 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card, Input, Select, Textarea } from "@/components/ui";
 import { useStore } from "@/lib/store";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants";
 import { formatDate, formatNaira } from "@/lib/utils";
 
-export default function TxnDetailPage() {
+function DetailInner() {
   const params = useParams<{ id: string }>();
+  const search = useSearchParams();
   const router = useRouter();
   const { transactions, updateTransaction, deleteTransaction } = useStore();
   const txn = transactions.find((t) => t.id === params.id);
   const [editing, setEditing] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
   const [form, setForm] = useState({ description: "", amount: "", category: "", notes: "" });
+
+  // ?edit=1 opens straight into edit mode (from dashboard table)
+  useEffect(() => {
+    if (txn && search.get("edit") === "1") {
+      setForm({ description: txn.description, amount: String(txn.amount), category: txn.category, notes: txn.notes ?? "" });
+      setEditing(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [txn?.id]);
 
   if (!txn) {
     return (
@@ -113,5 +123,13 @@ export default function TxnDetailPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TxnDetailPage() {
+  return (
+    <Suspense>
+      <DetailInner />
+    </Suspense>
   );
 }

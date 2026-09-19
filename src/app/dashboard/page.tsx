@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Menu, Plus, ScanLine, Sparkles, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Menu, Plus, ScanLine, Sparkles, TrendingUp, TrendingDown, Wallet, Eye, Pencil, Trash2 } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { Card, EmptyState, Skeleton } from "@/components/ui";
+import { Card, EmptyState, Skeleton, Button } from "@/components/ui";
 import { AddFab } from "@/components/AddFab";
 import { useSidebar } from "@/components/Nav";
 import { filterByPreset, summarize, dailySeries } from "@/lib/finance";
@@ -55,8 +56,11 @@ const QUICK_ACTIONS = [
 ];
 
 export default function DashboardPage() {
-  const { user, business, transactions, loading } = useStore();
+  const { user, business, transactions, loading, deleteTransaction } = useStore();
+  const router = useRouter();
   const [range, setRange] = useState<"week" | "month" | "year">("month");
+  const [delId, setDelId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filtered = useMemo(() => filterByPreset(transactions, range), [transactions, range]);
   const summary = useMemo(() => summarize(filtered), [filtered]);
@@ -65,6 +69,18 @@ export default function DashboardPage() {
 
   const maxVal = Math.max(1, ...series.flatMap((s) => [s.income, s.expense]));
   const firstName = (user?.name || "there").split(" ")[0];
+  const isProfit = summary.profit >= 0;
+
+  async function confirmDelete() {
+    if (!delId) return;
+    setDeleting(true);
+    try {
+      await deleteTransaction(delId);
+      setDelId(null);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -148,10 +164,10 @@ export default function DashboardPage() {
           <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(summary.moneyOut)}</p>
           <p className="text-[11px] text-gray-400">{summary.countOut} expense{summary.countOut === 1 ? "" : "s"}</p>
         </Card>
-        <Card className={`!p-3 md:!p-4 ${summary.profit >= 0 ? "bg-[#0F5132] text-white" : "bg-red-600 text-white"}`}>
-          <p className="flex items-center gap-1 text-[12px] font-bold opacity-80"><Wallet size={13} /> Profit</p>
-          <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(summary.profit)}</p>
-          <p className="text-[11px] opacity-70">{summary.profit >= 0 ? "🎉 you're growing" : "watch spending"}</p>
+        <Card className={`!p-3 md:!p-4 ${isProfit ? "bg-[#0F5132] text-white" : "bg-red-600 text-white"}`}>
+          <p className="flex items-center gap-1 text-[12px] font-bold opacity-80"><Wallet size={13} /> {isProfit ? "Profit" : "Loss"}</p>
+          <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(Math.abs(summary.profit))}</p>
+          <p className="text-[11px] opacity-70">{isProfit ? "🎉 you're growing" : "spending passed income"}</p>
         </Card>
       </div>
 
@@ -189,100 +205,107 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-2">
-            <div className="flex h-40 items-end gap-1.5 md:h-48">
-              {series.map((s, i) => (
-                <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                  <div className="flex w-full items-end justify-center gap-0.5">
-                    <div className="w-2.5 rounded-t bg-[#167C5A] md:w-3.5" style={{ height: `${Math.max(3, (s.income / maxVal) * 140)}px` }} title={`In ${s.income}`} />
-                    <div className="w-2.5 rounded-t bg-red-300 md:w-3.5" style={{ height: `${Math.max(3, (s.expense / maxVal) * 140)}px` }} title={`Out ${s.expense}`} />
-                  </div>
-                  {(series.length <= 8 || i % 2 === 0) && <span className="text-[9px] text-gray-400 md:text-[11px]">{s.label.slice(0, 3)}</span>}
+        <div className="mt-4">
+          <div className="flex h-40 items-end gap-1.5 md:h-52">
+            {series.map((s, i) => (
+              <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                <div className="flex w-full items-end justify-center gap-0.5">
+                  <div className="w-2.5 rounded-t bg-[#167C5A] md:w-4" style={{ height: `${Math.max(3, (s.income / maxVal) * 160)}px` }} title={`In ${s.income}`} />
+                  <div className="w-2.5 rounded-t bg-red-300 md:w-4" style={{ height: `${Math.max(3, (s.expense / maxVal) * 160)}px` }} title={`Out ${s.expense}`} />
                 </div>
-              ))}
-            </div>
-            <div className="mt-2 flex gap-4 text-[12px] text-gray-500">
-              <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#167C5A]" />Money in</span>
-              <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-red-300" />Money out</span>
-            </div>
+                {(series.length <= 8 || i % 2 === 0) && <span className="text-[9px] text-gray-400 md:text-[11px]">{s.label.slice(0, 3)}</span>}
+              </div>
+            ))}
           </div>
-          {/* Side rail — fills wide screens */}
-          <div className="flex flex-col gap-2 border-t border-gray-100 pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
-            <div className="rounded-2xl bg-[#F8FAF9] p-3.5">
-              <p className="text-[12px] font-bold uppercase tracking-wide text-gray-400">This {range}</p>
-              <p className="mt-1 text-[14px]">Money in <b className="text-[#167C5A]">{formatNaira(summary.moneyIn)}</b></p>
-              <p className="text-[14px]">Money out <b>{formatNaira(summary.moneyOut)}</b></p>
-              <p className="text-[14px]">Owed to you <b className="text-amber-600">{formatNaira(summary.owedToYou)}</b></p>
-            </div>
-            <Link href="/reports" className="rounded-2xl bg-[#DDF5EA] p-3.5 text-[14px] font-bold text-[#0F5132] transition hover:shadow-sm">
-              📊 View full reports →
-            </Link>
-            <Link href="/export" className="rounded-2xl border border-gray-200 p-3.5 text-[14px] font-bold transition hover:shadow-sm">
-              📤 Export CSV / PDF →
-            </Link>
+          <div className="mt-2 flex gap-4 text-[12px] text-gray-500">
+            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#167C5A]" />Money in</span>
+            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-red-300" />Money out</span>
           </div>
         </div>
       </Card>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <div>
-          <div className="flex items-center justify-between">
-            <h2 className="font-extrabold">Recent transactions</h2>
-            <Link href="/transactions" className="text-[13px] font-bold text-[#167C5A]">View all →</Link>
-          </div>
-          <div className="mt-2 flex flex-col gap-2">
-            {recent.map((t) => (
-              <Link key={t.id} href={`/transactions/${t.id}`}>
-                <Card className="flex items-center gap-3 !p-3 transition hover:shadow-md">
-                  <span className={`flex h-10 w-10 items-center justify-center rounded-full ${t.type === "income" ? "bg-[#DDF5EA]" : "bg-red-50"}`}>
-                    {t.type === "income" ? "💰" : "🧾"}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] font-bold">{t.description}</span>
-                    <span className="text-[12px] text-gray-500">{formatDate(t.transaction_date)}</span>
-                  </span>
-                  <span className={`font-extrabold ${t.type === "income" ? "text-[#167C5A]" : ""}`}>
-                    {t.type === "income" ? "+" : "−"}{formatNaira(t.amount)}
-                  </span>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-        <div>
-          <h2 className="font-extrabold">What next?</h2>
-          <div className="mt-2 flex flex-col gap-2">
-            <Link href="/scan">
-              <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-xl">📷</span>
-                <span>
-                  <span className="block text-[14px] font-bold">Digitize paper records</span>
-                  <span className="block text-[12px] text-gray-500">Snap a receipt, Ledgerly reads it</span>
-                </span>
-              </Card>
-            </Link>
-            <Link href="/ask">
-              <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-xl">✨</span>
-                <span>
-                  <span className="block text-[14px] font-bold">Ask about your business</span>
-                  <span className="block text-[12px] text-gray-500">“Where did I spend most?”</span>
-                </span>
-              </Card>
-            </Link>
-            <Link href="/reports">
-              <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#DDF5EA] text-xl">📊</span>
-                <span>
-                  <span className="block text-[14px] font-bold">See your reports</span>
-                  <span className="block text-[12px] text-gray-500">Income, expenses & profit</span>
-                </span>
-              </Card>
-            </Link>
-          </div>
-        </div>
+      <div className="mt-4 flex items-center justify-between">
+        <h2 className="font-extrabold">Recent transactions</h2>
+        <Link href="/transactions" className="text-[13px] font-bold text-[#167C5A]">View all →</Link>
       </div>
+      <Card className="mt-2 !p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[620px] text-left text-[14px]">
+            <thead>
+              <tr className="border-b border-gray-100 bg-[#F8FAF9] text-[12px] uppercase tracking-wide text-gray-500">
+                <th className="px-4 py-3 font-bold">Transaction</th>
+                <th className="px-4 py-3 font-bold">Date</th>
+                <th className="px-4 py-3 text-right font-bold">Amount</th>
+                <th className="px-4 py-3 text-right font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recent.map((t) => (
+                <tr key={t.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
+                  <td className="px-4 py-3">
+                    <span className="flex items-center gap-2.5">
+                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${t.type === "income" ? "bg-[#DDF5EA]" : "bg-red-50"}`}>
+                        {t.type === "income" ? "💰" : "🧾"}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-bold">{t.description}</span>
+                        <span className="block text-[12px] text-gray-500">{t.category} · {t.payment_status}</span>
+                      </span>
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatDate(t.transaction_date)}</td>
+                  <td className={`whitespace-nowrap px-4 py-3 text-right font-extrabold ${t.type === "income" ? "text-[#167C5A]" : "text-red-600"}`}>
+                    {t.type === "income" ? "+" : "−"}{formatNaira(t.amount)}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <span className="flex justify-end gap-1">
+                      <Link
+                        href={`/transactions/${t.id}`}
+                        title="View"
+                        aria-label={`View ${t.description}`}
+                        className="rounded-lg p-2 text-gray-500 hover:bg-[#DDF5EA] hover:text-[#0F5132]"
+                      >
+                        <Eye size={17} />
+                      </Link>
+                      <Link
+                        href={`/transactions/${t.id}?edit=1`}
+                        title="Edit"
+                        aria-label={`Edit ${t.description}`}
+                        className="rounded-lg p-2 text-gray-500 hover:bg-[#DDF5EA] hover:text-[#0F5132]"
+                      >
+                        <Pencil size={17} />
+                      </Link>
+                      <button
+                        title="Delete"
+                        aria-label={`Delete ${t.description}`}
+                        onClick={() => setDelId(t.id)}
+                        className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Trash2 size={17} />
+                      </button>
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {delId && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 md:items-center">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5">
+            <h3 className="font-extrabold">Delete this record?</h3>
+            <p className="mt-1 text-[14px] text-gray-600">This cannot be undone.</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={() => setDelId(null)}>Keep</Button>
+              <Button variant="danger" onClick={confirmDelete} disabled={deleting}>
+                {deleting ? "Deleting…" : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <AddFab />
     </div>
   );

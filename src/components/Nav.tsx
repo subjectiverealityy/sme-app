@@ -8,14 +8,13 @@ import {
   ScanLine,
   Sparkles,
   Menu,
-  X,
   ChevronLeft,
   ChevronRight,
-  Settings,
   Briefcase,
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useStore } from "@/lib/store";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 const items = [
@@ -103,12 +102,13 @@ const links = [
   { href: "/ask", label: "Ask Ledgerly", icon: Sparkles },
   { href: "/reports", label: "Reports", icon: TrendingUp },
   { href: "/business", label: "Business", icon: Briefcase },
-  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { open, setOpen } = useSidebar();
+  const { user } = useStore();
+  const initial = ((user?.name || user?.email || "B").trim().charAt(0) || "B").toUpperCase();
 
   return (
     <aside
@@ -180,17 +180,31 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom: close hint when expanded */}
-      {open && (
-        <div className="border-t border-gray-100 p-3">
-          <button
-            onClick={() => setOpen(false)}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-          >
-            <X size={18} /> Hide menu
-          </button>
-        </div>
-      )}
+      {/* Bottom: user profile */}
+      <div className="border-t border-gray-100 p-3">
+        <Link
+          href="/settings"
+          title={user?.name ?? "Account settings"}
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-gray-50",
+            !open && "justify-center"
+          )}
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#167C5A] text-[17px] font-extrabold text-white">
+            {initial}
+          </span>
+          {open && (
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[14px] font-bold text-[#17221D]">
+                {user?.name ?? "My account"}
+              </span>
+              <span className="block truncate text-[12px] text-gray-500">
+                {user?.email ?? "View settings →"}
+              </span>
+            </span>
+          )}
+        </Link>
+      </div>
     </aside>
   );
 }
