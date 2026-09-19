@@ -22,6 +22,9 @@ import {
   replyLink,
   appendReplyLink,
   promiseFollowUp,
+  brokenPromises,
+  rowBrokenPromise,
+  buildPromiseFollowUpMessage,
 } from "../src/lib/collections.ts";
 
 const txn = (over: Partial<Transaction> = {}): Transaction => ({
@@ -293,11 +296,12 @@ const reply = (
   intent: DebtReply["intent"],
   promised_date: string | null,
   status: DebtReply["status"] = "confirmed",
-  created_at = "2026-09-18T12:00:00Z"
+  created_at = "2026-09-18T12:00:00Z",
+  transaction_id = "txn_1"
 ): DebtReply => ({
   id: `rep_${Math.random().toString(36).slice(2, 8)}`,
   business_id: "biz_demo",
-  transaction_id: "txn_1",
+  transaction_id,
   raw_text: "test",
   intent,
   promised_date,
@@ -339,4 +343,124 @@ test("promiseFollowUp ignores dismissed/draft replies and other intents", () => 
   const fu = promiseFollowUp("txn_1", replies, now);
   assert.equal(fu.due, false);
   assert.equal(fu.promisedDate, null);
+});
+// --- Auto re-reminders on promised dates -----------------------------------
+
+const reminder = (
+  tid: string,
+  daysAgo: number,
+  now: Date
+): DebtReminder => {
+  const at = new Date(now.getTime() - daysAgo * 86400000).toISOString();
+  return {
+    id: `rem_${tid}_${daysAgo}`,
+    business_id: "biz_demo",
+    transaction_id: tid,
+    debtor_name: "Chidi",
+    debtor_phone: "",
+    stage: 1,
+    language: "english",
+    message: "test",
+    status: "sent",
+    sent_at: at,
+    created_at: at,
+  };
+};
+
+test("rowBrokenPromise picks the most-late broken debt on a row", () => {
+  const base = txn({ id: "txn_1", amount: 10000 });
+  const now = new Date("2026-09-19");
+  const rows = buildDebtReport(
+    [base],
+    [],
+    [],
+    [reply("promise_to_pay", "2026-09-10", "confirmed", "2026-09-15T10:00:00Z")],
+    now
+  );
+  const hit = rowBrokenPromise(rows[0], now);
+  assert.ok(hit);
+  assert.equal(hit!.fu.daysLate, 9);
+  assert.equal(hit!.debt.balance, 10000);
+});
+
+test("rowBrokenPromise is null when the latest promise is still future", () => {
+  const base = txn({ id: "txn_1", amount: 10000 });
+  const now = new Date("2026-09-19");
+  const rows = buildDebtReport(
+    [base],
+    [],
+    [],
+    [reply("promise_to_pay", "2026-09-25", "confirmed", "2026-09-18T10:00:00Z")],
+    now
+  );
+  assert.equal(rowBrokenPromise(rows[0], now), null);
+});
+
+test("brokenPromises sorts most-late first and carries canSend", () => {
+  const now = new Date("2026-09-19");
+  const a = txn({ id: "txn_a", customer_or_vendor: "Chidi", customer_phone: "", amount: 5000, transaction_date: "2026-08-01" });
+  const b = txn({ id: "txn_b", customer_or_vendor: "Adaeze", customer_phone: "", amount: 9000, transaction_date: "2026-08-05" });
+  const rows = buildDebtReport(
+    [a, b],
+    [],
+    [reminder("txn_a", 2, now), reminder("txn_a", 5, now), reminder("txn_a", 8, now)],
+    [
+      reply("promise_to_pay", "2026-09-10", "confirmed", "2026-09-15T10:00:00Z", "txn_a"),
+      reply("promise_to_pay", "2026-09-01", "confirmed", "2026-09-14T10:00:00Z", "txn_b"),
+    ],
+    now
+  );
+  const broken = brokenPromises(rows, now);
+  assert.equal(broken.length, 2);
+  assert.equal(broken[0].debtorName, "Adaeze"); // most-late first (Sep 1)
+  assert.equal(broken[0].daysLate, 18);
+  assert.equal(broken[0].balance, 9000);
+  assert.equal(broken[0].canSend, true);
+  assert.equal(broken[1].debtorName, "Chidi");
+  assert.equal(broken[1].daysLate, 9);
+  assert.equal(broken[1].canSend, false); // 3 reminders inside the 14-day window
+});
+
+test("break is excluded once the balance is cleared", () => {
+  const now = new Date("2026-09-19");
+  const a = txn({ id: "txn_a", customer_or_vendor: "Chidi", customer_phone: "", amount: 5000, transaction_date: "2026-08-01" });
+  const rows = buildDebtReport(
+    [a],
+    [{ id: "pay_1", business_id: "biz_demo", transaction_id: "txn_a", amount: 5000, paid_at: "2026-09-15T10:00:00Z", created_at: "2026-09-15T10:00:00Z" }],
+    [],
+    [reply("promise_to_pay", "2026-09-10", "confirmed", "2026-09-15T10:00:00Z", "txn_a")],
+    now
+  );
+  assert.equal(brokenPromises(rows, now).length, 0);
+});
+
+test("buildPromiseFollowUpMessage names the missed date and amount", () => {
+  const msg = buildPromiseFollowUpMessage({
+    businessName: "Ada's Store",
+    customerName: "Chidi",
+    amount: 20000,
+    dateLabel: "1 Aug",
+    stage: 2,
+    language: "english",
+    daysOverdue: 40,
+    promisedDate: "2026-09-10",
+    daysLate: 9,
+  });
+  assert.ok(msg.includes("₦20,000"));
+  assert.ok(msg.includes("said you would pay on 10 Sep"));
+});
+
+test("buildPromiseFollowUpMessage has a pidgin variant", () => {
+  const msg = buildPromiseFollowUpMessage({
+    businessName: "Ada's Store",
+    customerName: "Chidi",
+    amount: 5000,
+    dateLabel: "1 Aug",
+    stage: 2,
+    language: "pidgin",
+    daysOverdue: 40,
+    promisedDate: "2026-09-10",
+    daysLate: 9,
+  });
+  assert.ok(msg.includes("abeg settle am today"));
 });

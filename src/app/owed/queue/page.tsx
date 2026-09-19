@@ -7,24 +7,32 @@ import { Badge, Button } from "@/components/ui";
 import { useStore } from "@/lib/store";
 import type { DebtorRow, ReminderLanguage } from "@/lib/collections";
 import {
-  buildDebtReport,
-  naira,
-  ageLabel,
-  waLink,
   appendReplyLink,
+  buildDebtReport,
+  buildPromiseFollowUpMessage,
   buildReminderMessage,
   clampStage,
+  longDate,
+  naira,
+  ageLabel,
   replyLink,
+  rowBrokenPromise,
+  waLink,
 } from "@/lib/collections";
 import { ComposeMessage, ConfirmButtons, LanguageToggle, Sheet, StagePill } from "@/components/owed/ReminderCompose";
 
 type Action = "skip" | "remind";
 
-const DATE_LABEL = (row: DebtorRow) =>
-  row.debts[0]?.transaction.transaction_date
-    ? new Date(row.debts[0].transaction.transaction_date)
-        .toLocaleDateString("en-GB", { day: "numeric", month: "short" })
-    : "last month";
+/** The debt a reminder targets: a broken promise first (so the follow-up
+ *  references the right amount + date), otherwise the oldest debt. */
+const repDebt = (row: DebtorRow) =>
+  rowBrokenPromise(row)?.debt ?? [...row.debts].sort((a, b) => a.daysOld - b.daysOld)[0];
+
+const stageFor = (row: DebtorRow) => {
+  const debt = repDebt(row);
+  if (!debt) return 1;
+  return rowBrokenPromise(row) ? Math.max(debt.reminders.nextStage, 2) : debt.reminders.nextStage;
+};
 
 export default function OwedQueuePage() {
   const { business, transactions, debtPayments, debtReminders, debtReplies, logReminder } = useStore();
@@ -32,7 +40,17 @@ export default function OwedQueuePage() {
     () => buildDebtReport(transactions, debtPayments, debtReminders, debtReplies),
     [transactions, debtPayments, debtReminders, debtReplies]
   );
-  const queue = useMemo(() => report.filter((r) => r.phone.ok), [report]);
+  const queue = useMemo(
+    () =>
+      report
+        .filter((r) => r.phone.ok)
+        .sort((a, b) => {
+          const ba = rowBrokenPromise(a);
+          const bb = rowBrokenPromise(b);
+          return Number(!!bb) - Number(!!ba) || b.totalOwed - a.totalOwed;
+        }),
+    [report]
+  );
   const [index, setIndex] = useState(0);
   const [off, setOff] = useState<Record<string, Action>>({});
   const [language, setLanguage] = useState<ReminderLanguage>("english");
@@ -48,14 +66,15 @@ export default function OwedQueuePage() {
 
   const reminderInputs = useCallback(
     (row: DebtorRow) => {
-      const debt = [...row.debts].sort((a, b) => a.daysOld - b.daysOld)[0];
-      const stage = debt ? debt.reminders.nextStage : 1;
+      const debt = repDebt(row);
       return {
         businessName: business?.name ?? "our business",
         customerName: row.name,
-        amount: row.totalOwed,
-        dateLabel: DATE_LABEL(row),
-        stage,
+        amount: debt?.balance ?? row.totalOwed,
+        dateLabel: debt?.transaction.transaction_date
+          ? new Date(debt.transaction.transaction_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+          : "last month",
+        stage: stageFor(row),
         language,
         paymentDetails: business?.payment_details ?? "",
         daysOverdue: row.oldestDays,
@@ -66,7 +85,17 @@ export default function OwedQueuePage() {
 
   const openRemind = () => {
     if (!current) return;
-    setMessage(buildReminderMessage(reminderInputs(current)));
+    const broken = repDebt(current) ? rowBrokenPromise(current) : null;
+    const inputs = reminderInputs(current);
+    setMessage(
+      broken && broken.fu.promisedDate
+        ? buildPromiseFollowUpMessage({
+            ...inputs,
+            promisedDate: broken.fu.promisedDate,
+            daysLate: broken.fu.daysLate,
+          })
+        : buildReminderMessage(inputs)
+    );
     setConfirming(current);
   };
 
@@ -85,16 +114,17 @@ export default function OwedQueuePage() {
     }
     setBusy(true);
     try {
+      const debt = repDebt(confirming);
       const stage = clampStage(reminderInputs(confirming).stage);
       const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const link = replyLink(origin, confirming.debts[0].transaction.id, {
+      const link = replyLink(origin, debt.transaction.id, {
         business: business?.name,
         debtor: confirming.name,
-        amount: confirming.totalOwed,
+        amount: debt.balance,
       });
       const finalMessage = appendReplyLink(message, link);
       await logReminder({
-        transaction_id: confirming.debts[0].transaction.id,
+        transaction_id: debt.transaction.id,
         debtor_name: confirming.name,
         debtor_phone: confirming.phone.e164,
         stage,
@@ -115,7 +145,7 @@ export default function OwedQueuePage() {
     if (!current) return;
     const inputs = reminderInputs(current);
     void logReminder({
-      transaction_id: current.debts[0].transaction.id,
+      transaction_id: repDebt(current).transaction.id,
       debtor_name: current.name,
       debtor_phone: current.phone.ok ? current.phone.e164 : "",
       stage: clampStage(inputs.stage),
@@ -153,22 +183,22 @@ export default function OwedQueuePage() {
       <div className="flex flex-col items-center px-4 py-10 text-center">
         {total === 0 ? (
           <>
-            <PartyPopper size={40} className="text-[#167C5A]" />
-            <h1 className="mt-3 text-[22px] font-extrabold text-[#0F5132]">Nothing to chase</h1>
+            <PartyPopper size={40} className="text-ink" />
+            <h1 className="mt-3 text-[22px] font-extrabold text-ink">Nothing to chase</h1>
             <p className="mt-1 max-w-[280px] text-[14px] text-gray-600">
               Nobody with a phone number owes you right now. Add a phone number on a debtor&apos;s card to swipe through
               reminders.
             </p>
-            <Link href="/owed" className="mt-4 font-bold text-[#167C5A]">← Back to Who owes me</Link>
+            <Link href="/owed" className="mt-4 font-bold text-ink">← Back to Who owes me</Link>
           </>
         ) : (
           <>
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#DDF5EA] text-3xl">✅</div>
-            <h1 className="mt-3 text-[22px] font-extrabold text-[#0F5132]">All caught up!</h1>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-mint-light text-3xl">✅</div>
+            <h1 className="mt-3 text-[22px] font-extrabold text-ink">All caught up!</h1>
             <p className="mt-1 text-[14px] text-gray-600">
               {sent} reminder{sent === 1 ? "" : "s"} sent · {skipped} skipped
             </p>
-            <Link href="/owed" className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#167C5A] px-6 font-semibold text-white">
+            <Link href="/owed" className="mt-4 inline-flex min-h-[48px] items-center justify-center rounded-xl bg-primary px-6 font-semibold text-white">
               Back to Who owes me
             </Link>
           </>
@@ -180,13 +210,13 @@ export default function OwedQueuePage() {
   return (
     <div className="flex min-h-[70vh] flex-col py-4">
       <div className="flex items-center justify-between">
-        <Link href="/owed" className="text-[14px] font-bold text-[#167C5A]">← Who owes me</Link>
+        <Link href="/owed" className="text-[14px] font-bold text-ink">← Who owes me</Link>
         <span className="text-[13px] font-bold text-gray-500">
           {Math.min(index + 1, queue.length)} of {queue.length}
         </span>
       </div>
 
-      <p className="mt-2 text-[15px] font-extrabold text-[#0F5132]">Reminders in swipe mode</p>
+      <p className="mt-2 text-[15px] font-extrabold text-ink">Reminders in swipe mode</p>
       <p className="text-[13px] text-gray-500">Drag the card — right to remind, left to skip.</p>
 
       <div className="relative mx-auto mt-4 h-[420px] w-full max-w-sm">
@@ -210,20 +240,28 @@ export default function OwedQueuePage() {
             >
               <div
                 className={`flex h-full flex-col overflow-hidden rounded-3xl bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.18)] ${
-                  decided === "remind" ? "ring-4 ring-[#167C5A]" : decided === "skip" ? "ring-4 ring-gray-300" : ""
+                  decided === "remind" ? "ring-4 ring-primary" : decided === "skip" ? "ring-4 ring-gray-300" : ""
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <Badge tone={row.phone.ok ? "green" : "neutral"}>
                     {row.phone.ok ? "WhatsApp ready" : "no phone"}
                   </Badge>
-                  <Badge tone={row.overdueCount > 0 ? "red" : "neutral"}>
-                    {row.overdueCount > 0 ? `${row.overdueCount} overdue` : "not overdue"}
-                  </Badge>
+                  {(() => {
+                    const broken = rowBrokenPromise(row);
+                    if (broken?.fu.promisedDate) {
+                      return <Badge tone="red">Promise broke {longDate(broken.fu.promisedDate)}</Badge>;
+                    }
+                    return (
+                      <Badge tone={row.overdueCount > 0 ? "red" : "neutral"}>
+                        {row.overdueCount > 0 ? `${row.overdueCount} overdue` : "not overdue"}
+                      </Badge>
+                    );
+                  })()}
                 </div>
 
                 <div className="mt-4 flex items-center gap-3">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#DDF5EA] text-2xl font-extrabold text-[#0F5132]">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-mint-light text-2xl font-extrabold text-ink">
                     {row.name.charAt(0).toUpperCase()}
                   </span>
                   <div className="min-w-0">
@@ -232,10 +270,10 @@ export default function OwedQueuePage() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-end justify-between rounded-2xl bg-[#F8FAF9] px-4 py-3">
+                <div className="mt-3 flex items-end justify-between rounded-2xl bg-background px-4 py-3">
                   <div>
                     <p className="text-[12px] font-bold uppercase tracking-wide text-gray-400">Owes you</p>
-                    <p className="text-[24px] font-extrabold text-[#0F5132]">{naira(row.totalOwed)}</p>
+                    <p className="text-[24px] font-extrabold text-ink">{naira(row.totalOwed)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[12px] font-bold uppercase tracking-wide text-gray-400">Oldest debt</p>
@@ -248,7 +286,7 @@ export default function OwedQueuePage() {
                     {isTop && (
                       <>
                         <div className="flex items-center gap-2">
-                          <StagePill stage={[...row.debts].sort((a, b) => a.daysOld - b.daysOld)[0]?.reminders.nextStage ?? 1} />
+                          <StagePill stage={stageFor(row)} />
                           <LanguageToggle language={language} onChange={setLanguage} />
                         </div>
                         <p className="mt-2 line-clamp-3 overflow-hidden text-[13px] text-gray-500">
@@ -291,7 +329,7 @@ export default function OwedQueuePage() {
       >
         {confirming?.phone.ok && (
           <div className="flex flex-col gap-3">
-            <div className="rounded-xl bg-[#F8FAF9] px-3 py-2 text-[13px] text-gray-600">
+            <div className="rounded-xl bg-background px-3 py-2 text-[13px] text-gray-600">
               ✓ WhatsApp number <b>+{confirming.phone.e164}</b>
             </div>
             <ComposeMessage

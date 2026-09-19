@@ -9,6 +9,7 @@ import { AddFab } from "@/components/AddFab";
 import { useSidebar } from "@/components/Nav";
 import { filterByPreset, summarize, dailySeries } from "@/lib/finance";
 import { formatDate, formatNaira, greetingForHour } from "@/lib/utils";
+import { brokenPromises, buildDebtReport, longDate } from "@/lib/collections";
 
 function PageHeader({ name, businessName }: { name: string; businessName?: string }) {
   const { open, setOpen } = useSidebar();
@@ -19,12 +20,12 @@ function PageHeader({ name, businessName }: { name: string; businessName?: strin
         <button
           onClick={() => setOpen(true)}
           aria-label="Open menu"
-          className="hidden rounded-xl border border-gray-200 bg-white p-2.5 text-gray-600 hover:text-[#0F5132] md:block"
+          className="hidden rounded-xl border border-gray-200 bg-white p-2.5 text-gray-600 hover:text-ink md:block"
         >
           <Menu size={20} />
         </button>
       )}
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#167C5A] text-lg font-extrabold text-white">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mint text-lg font-extrabold text-primary">
         {initial}
       </div>
       <div className="min-w-0 flex-1">
@@ -32,14 +33,14 @@ function PageHeader({ name, businessName }: { name: string; businessName?: strin
           {greetingForHour()}, {name} 👋
         </h1>
         {businessName && (
-          <span className="mt-0.5 inline-block max-w-full truncate rounded-full bg-[#DDF5EA] px-2.5 py-0.5 text-[12px] font-bold text-[#0F5132]">
+          <span className="mt-0.5 inline-block max-w-full truncate rounded-full bg-mint-light px-2.5 py-0.5 text-[12px] font-bold text-ink">
             {businessName}
           </span>
         )}
       </div>
       <Link
         href="/transactions/new?type=income"
-        className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#167C5A] px-4 py-2.5 text-[14px] font-bold text-white shadow-sm transition hover:bg-[#0F5132]"
+        className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-[14px] font-bold text-white shadow-sm transition hover:bg-primary-dark"
       >
         <Plus size={17} /> <span className="hidden sm:inline">Add</span>
       </Link>
@@ -48,20 +49,25 @@ function PageHeader({ name, businessName }: { name: string; businessName?: strin
 }
 
 const QUICK_ACTIONS = [
-  { href: "/transactions/new?type=income", icon: "💰", label: "Record sale", sub: "Money in", bg: "bg-[#DDF5EA]" },
+  { href: "/transactions/new?type=income", icon: "💰", label: "Record sale", sub: "Money in", bg: "bg-mint" },
   { href: "/transactions/new?type=expense", icon: "🧾", label: "Add expense", sub: "Money out", bg: "bg-red-50" },
   { href: "/scan", icon: "📷", label: "Scan record", sub: "Digitize paper", bg: "bg-amber-50" },
   { href: "/ask", icon: "✨", label: "Ask AI", sub: "Insights", bg: "bg-violet-50" },
 ];
 
 export default function DashboardPage() {
-  const { user, business, transactions, loading } = useStore();
+  const { user, business, transactions, debtPayments, debtReminders, debtReplies, loading } = useStore();
   const [range, setRange] = useState<"week" | "month" | "year">("month");
 
   const filtered = useMemo(() => filterByPreset(transactions, range), [transactions, range]);
   const summary = useMemo(() => summarize(filtered), [filtered]);
   const series = useMemo(() => dailySeries(filtered, range === "week" ? 7 : range === "month" ? 14 : 12), [filtered, range]);
   const recent = useMemo(() => [...transactions].sort((a, b) => +new Date(b.transaction_date) - +new Date(a.transaction_date)).slice(0, 5), [transactions]);
+  const owedReport = useMemo(
+    () => buildDebtReport(transactions, debtPayments, debtReminders, debtReplies),
+    [transactions, debtPayments, debtReminders, debtReplies]
+  );
+  const broken = useMemo(() => brokenPromises(owedReport), [owedReport]);
 
   const maxVal = Math.max(1, ...series.flatMap((s) => [s.income, s.expense]));
   const firstName = (user?.name || "there").split(" ")[0];
@@ -83,7 +89,7 @@ export default function DashboardPage() {
       <div className="py-6">
         <PageHeader name={firstName} />
         <div className="mt-4">
-          <EmptyState title="Set up your business" body="Create your business profile to start." action={<Link href="/onboarding" className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#167C5A] font-semibold text-white">Set up business</Link>} />
+          <EmptyState title="Set up your business" body="Create your business profile to start." action={<Link href="/onboarding" className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-primary font-semibold text-white">Set up business</Link>} />
         </div>
       </div>
     );
@@ -94,7 +100,7 @@ export default function DashboardPage() {
       <div className="py-4 animate-fade-up">
         <PageHeader name={firstName} businessName={business.name} />
         {/* Hero empty state */}
-        <div className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F5132] to-[#167C5A] p-6 text-center text-white md:p-8">
+        <div className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#2D2445] to-[#443A5C] p-6 text-center text-white md:p-8">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-3xl">📒</div>
           <h2 className="mt-3 text-[20px] font-extrabold md:text-[24px]">Your business story starts here.</h2>
@@ -103,7 +109,7 @@ export default function DashboardPage() {
           </p>
           <Link
             href="/first-transaction"
-            className="mx-auto mt-4 block w-full max-w-[300px] rounded-2xl bg-white py-3.5 font-extrabold text-[#0F5132] transition hover:scale-[1.02]"
+            className="mx-auto mt-4 block w-full max-w-[300px] rounded-2xl bg-white py-3.5 font-extrabold text-ink transition hover:scale-[1.02]"
           >
             Add your first transaction
           </Link>
@@ -125,7 +131,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        <div className="mt-3 rounded-2xl bg-[#DDF5EA] px-4 py-3 text-[13px] text-[#0F5132]">
+        <div className="mt-3 rounded-2xl bg-mint-light px-4 py-3 text-[13px] text-ink">
           💡 <b>Tip:</b> most owners start by recording today&apos;s sales — it takes about 30 seconds.
         </div>
       </div>
@@ -138,27 +144,45 @@ export default function DashboardPage() {
 
       {/* Summary cards */}
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <Card className="border border-[#167C5A]/15 bg-[#DDF5EA] !p-3 md:!p-4">
-          <p className="flex items-center gap-1 text-[12px] font-bold text-[#0F5132]"><TrendingUp size={13} /> Money In</p>
-          <p className="mt-1 text-[17px] font-extrabold text-[#0F5132] md:text-[22px]">{formatNaira(summary.moneyIn)}</p>
-          <p className="text-[11px] text-[#0F5132]/60">{summary.countIn} sale{summary.countIn === 1 ? "" : "s"}</p>
+        <Card className="border border-primary/10 bg-mint !p-3 md:!p-4">
+          <p className="flex items-center gap-1 text-[12px] font-bold text-ink"><TrendingUp size={13} /> Money In</p>
+          <p className="mt-1 text-[17px] font-extrabold text-ink md:text-[22px]">{formatNaira(summary.moneyIn)}</p>
+          <p className="text-[11px] text-ink/60">{summary.countIn} sale{summary.countIn === 1 ? "" : "s"}</p>
         </Card>
         <Card className="!p-3 md:!p-4">
           <p className="flex items-center gap-1 text-[12px] font-bold text-gray-500"><TrendingDown size={13} /> Money Out</p>
           <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(summary.moneyOut)}</p>
           <p className="text-[11px] text-gray-400">{summary.countOut} expense{summary.countOut === 1 ? "" : "s"}</p>
         </Card>
-        <Card className={`!p-3 md:!p-4 ${summary.profit >= 0 ? "bg-[#0F5132] text-white" : "bg-red-600 text-white"}`}>
+        <Card className={`!p-3 md:!p-4 ${summary.profit >= 0 ? "bg-primary text-white" : "bg-red-600 text-white"}`}>
           <p className="flex items-center gap-1 text-[12px] font-bold opacity-80"><Wallet size={13} /> Profit</p>
           <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(summary.profit)}</p>
           <p className="text-[11px] opacity-70">{summary.profit >= 0 ? "🎉 you're growing" : "watch spending"}</p>
         </Card>
       </div>
 
+      {broken.length > 0 && (
+        <Link href="/owed/queue">
+          <div className="mt-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[14px] transition hover:shadow-sm">
+            <p className="font-bold text-[#B91C1C]">
+              🔔 {broken.length === 1 ? "1 promise broke" : `${broken.length} promises broke`}
+            </p>
+            <p className="mt-0.5 text-[13px] text-gray-700">
+              {broken.slice(0, 2).map((b) => `${b.debtorName} (${formatNaira(b.balance)}, said ${longDate(b.promisedDate)})`).join(" · ")}
+              {broken.length > 2 ? ` · +${broken.length - 2} more` : ""}
+            </p>
+            <p className="mt-1 font-bold text-ink">
+              → Send auto follow-ups
+              {broken.some((b) => !b.canSend) ? " (some cooling off)" : ""}
+            </p>
+          </div>
+        </Link>
+      )}
+
       {summary.owedToYou > 0 && (
         <Link href="/owed">
           <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-[14px] transition hover:shadow-sm">
-            💛 <b>Money you&apos;re owed:</b> {formatNaira(summary.owedToYou)} <span className="font-bold text-[#167C5A]">→ send reminders</span>
+            💛 <b>Money you&apos;re owed:</b> {formatNaira(summary.owedToYou)} <span className="font-bold text-ink">→ send reminders</span>
           </div>
         </Link>
       )}
@@ -171,7 +195,7 @@ export default function DashboardPage() {
           { href: "/scan", icon: <ScanLine size={18} />, label: "Scan" },
           { href: "/ask", icon: <Sparkles size={18} />, label: "Ask AI" },
         ].map((a) => (
-          <Link key={a.label} href={a.href} className="flex flex-col items-center gap-1 rounded-2xl bg-white py-3 text-[#0F5132] shadow-sm transition hover:bg-[#DDF5EA]">
+          <Link key={a.label} href={a.href} className="flex flex-col items-center gap-1 rounded-2xl bg-white py-3 text-ink shadow-sm transition hover:bg-mint-light">
             {a.icon}
             <span className="text-[12px] font-bold">{a.label}</span>
           </Link>
@@ -195,7 +219,7 @@ export default function DashboardPage() {
               {series.map((s, i) => (
                 <div key={i} className="flex flex-1 flex-col items-center gap-1">
                   <div className="flex w-full items-end justify-center gap-0.5">
-                    <div className="w-2.5 rounded-t bg-[#167C5A] md:w-3.5" style={{ height: `${Math.max(3, (s.income / maxVal) * 140)}px` }} title={`In ${s.income}`} />
+                    <div className="w-2.5 rounded-t bg-primary md:w-3.5" style={{ height: `${Math.max(3, (s.income / maxVal) * 140)}px` }} title={`In ${s.income}`} />
                     <div className="w-2.5 rounded-t bg-red-300 md:w-3.5" style={{ height: `${Math.max(3, (s.expense / maxVal) * 140)}px` }} title={`Out ${s.expense}`} />
                   </div>
                   {(series.length <= 8 || i % 2 === 0) && <span className="text-[9px] text-gray-400 md:text-[11px]">{s.label.slice(0, 3)}</span>}
@@ -203,19 +227,19 @@ export default function DashboardPage() {
               ))}
             </div>
             <div className="mt-2 flex gap-4 text-[12px] text-gray-500">
-              <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#167C5A]" />Money in</span>
+              <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-primary" />Money in</span>
               <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-red-300" />Money out</span>
             </div>
           </div>
           {/* Side rail — fills wide screens */}
           <div className="flex flex-col gap-2 border-t border-gray-100 pt-3 md:border-l md:border-t-0 md:pl-4 md:pt-0">
-            <div className="rounded-2xl bg-[#F8FAF9] p-3.5">
+            <div className="rounded-2xl bg-background p-3.5">
               <p className="text-[12px] font-bold uppercase tracking-wide text-gray-400">This {range}</p>
-              <p className="mt-1 text-[14px]">Money in <b className="text-[#167C5A]">{formatNaira(summary.moneyIn)}</b></p>
+              <p className="mt-1 text-[14px]">Money in <b className="text-ink">{formatNaira(summary.moneyIn)}</b></p>
               <p className="text-[14px]">Money out <b>{formatNaira(summary.moneyOut)}</b></p>
               <p className="text-[14px]">Owed to you <b className="text-amber-600">{formatNaira(summary.owedToYou)}</b></p>
             </div>
-            <Link href="/reports" className="rounded-2xl bg-[#DDF5EA] p-3.5 text-[14px] font-bold text-[#0F5132] transition hover:shadow-sm">
+            <Link href="/reports" className="rounded-2xl bg-mint-light p-3.5 text-[14px] font-bold text-ink transition hover:shadow-sm">
               📊 View full reports →
             </Link>
             <Link href="/export" className="rounded-2xl border border-gray-200 p-3.5 text-[14px] font-bold transition hover:shadow-sm">
@@ -229,20 +253,20 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center justify-between">
             <h2 className="font-extrabold">Recent transactions</h2>
-            <Link href="/transactions" className="text-[13px] font-bold text-[#167C5A]">View all →</Link>
+            <Link href="/transactions" className="text-[13px] font-bold text-ink">View all →</Link>
           </div>
           <div className="mt-2 flex flex-col gap-2">
             {recent.map((t) => (
               <Link key={t.id} href={`/transactions/${t.id}`}>
                 <Card className="flex items-center gap-3 !p-3 transition hover:shadow-md">
-                  <span className={`flex h-10 w-10 items-center justify-center rounded-full ${t.type === "income" ? "bg-[#DDF5EA]" : "bg-red-50"}`}>
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-full ${t.type === "income" ? "bg-mint-light" : "bg-red-50"}`}>
                     {t.type === "income" ? "💰" : "🧾"}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[14px] font-bold">{t.description}</span>
                     <span className="text-[12px] text-gray-500">{formatDate(t.transaction_date)}</span>
                   </span>
-                  <span className={`font-extrabold ${t.type === "income" ? "text-[#167C5A]" : ""}`}>
+                  <span className={`font-extrabold ${t.type === "income" ? "text-ink" : ""}`}>
                     {t.type === "income" ? "+" : "−"}{formatNaira(t.amount)}
                   </span>
                 </Card>
@@ -267,7 +291,7 @@ export default function DashboardPage() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-xl">📷</span>
                 <span>
                   <span className="block text-[14px] font-bold">Digitize paper records</span>
-                  <span className="block text-[12px] text-gray-500">Snap a receipt, Ledgerly reads it</span>
+                  <span className="block text-[12px] text-gray-500">Snap a receipt, Credyt reads it</span>
                 </span>
               </Card>
             </Link>
@@ -282,7 +306,7 @@ export default function DashboardPage() {
             </Link>
             <Link href="/reports">
               <Card className="flex items-center gap-3 !p-3.5 transition hover:shadow-md">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#DDF5EA] text-xl">📊</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-mint-light text-xl">📊</span>
                 <span>
                   <span className="block text-[14px] font-bold">See your reports</span>
                   <span className="block text-[12px] text-gray-500">Income, expenses & profit</span>

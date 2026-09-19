@@ -132,6 +132,55 @@ export function promiseFollowUp(
   return { due: ref.getTime() >= promised.getTime(), promisedDate: latest.promised_date, daysLate };
 }
 
+export interface BrokenPromise {
+  debtorName: string;
+  transactionId: string;
+  promisedDate: string;
+  daysLate: number;
+  balance: number;
+  canSend: boolean;
+}
+
+/** The most-late debt on a row that has a confirmed promise already passed
+ *  and a remaining balance. Null when the row keeps every promise. */
+export function rowBrokenPromise(
+  row: Pick<DebtorRow, "debts">,
+  reference: Date = new Date()
+): { debt: DebtItem; fu: PromiseFollowUp } | null {
+  const due = row.debts
+    .filter((d) => d.balance > 0 && promiseFollowUp(d.transaction.id, d.conversation, reference).due)
+    .sort((a, b) => {
+      const fa = promiseFollowUp(a.transaction.id, a.conversation, reference);
+      const fb = promiseFollowUp(b.transaction.id, b.conversation, reference);
+      return fb.daysLate - fa.daysLate || b.balance - a.balance;
+    });
+  const debt = due[0];
+  if (!debt) return null;
+  return { debt, fu: promiseFollowUp(debt.transaction.id, debt.conversation, reference) };
+}
+
+/** Every row with a broken promise, most-late first — drives auto re-reminders. */
+export function brokenPromises(
+  rows: Pick<DebtorRow, "name" | "debts">[],
+  reference: Date = new Date()
+): BrokenPromise[] {
+  const out: BrokenPromise[] = [];
+  for (const row of rows) {
+    const hit = rowBrokenPromise(row, reference);
+    if (hit) {
+      out.push({
+        debtorName: row.name,
+        transactionId: hit.debt.transaction.id,
+        promisedDate: hit.fu.promisedDate ?? "",
+        daysLate: hit.fu.daysLate,
+        balance: hit.debt.balance,
+        canSend: hit.debt.reminders.canSend,
+      });
+    }
+  }
+  return out.sort((a, b) => b.daysLate - a.daysLate || b.balance - a.balance);
+}
+
 // ---------------------------------------------------------------------------
 // Date / age helpers
 // ---------------------------------------------------------------------------
@@ -268,6 +317,20 @@ export function buildReminderMessage(inputs: MessageInputs): string {
     msg += `\n\nYou can pay into: ${payment}`;
   }
   return msg;
+}
+
+/** Follow-up message for a broken promise — names the exact missed date and
+ *  asks for payment or a new date. Use with inputs.stage already ≥ 2. */
+export function buildPromiseFollowUpMessage(
+  inputs: MessageInputs & { promisedDate: string; daysLate: number }
+): string {
+  const base = buildReminderMessage(inputs);
+  const when = longDate(inputs.promisedDate);
+  const line =
+    inputs.language === "pidgin"
+      ? `You tell us say you go pay on ${when}. If you don't pay already, abeg settle am today or tell us new date. If you don pay, ignore this message.`
+      : `You said you would pay on ${when}. If you have paid, please ignore this. Otherwise, please complete it today or let us know a new date.`;
+  return `${base}\n\n${line}`;
 }
 
 /**
