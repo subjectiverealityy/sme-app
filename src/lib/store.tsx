@@ -194,6 +194,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- standard data-fetching pattern
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- standard data-fetching pattern
   useEffect(() => {
     refresh();
   }, [refresh]);

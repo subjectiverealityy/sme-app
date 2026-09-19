@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Select } from "@/components/ui";
 import { useStore } from "@/lib/store";
-import { EXPENSE_CATEGORIES } from "@/lib/constants";
-import { formatNaira, toISODate } from "@/lib/utils";
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants";
+import { formatNaira } from "@/lib/utils";
+import { localDateISO } from "@/lib/ocr";
 
 export default function ScanPage() {
   const router = useRouter();
@@ -17,11 +18,12 @@ export default function ScanPage() {
     type: "expense" as "income" | "expense",
     description: "",
     amount: "",
-    date: toISODate(new Date()),
+    date: localDateISO(),
     category: "Inventory / Stock",
     payment_status: "paid",
     payment_method: "Cash",
   });
+  const [reviewFields, setReviewFields] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
 
@@ -31,6 +33,7 @@ export default function ScanPage() {
     setPreview(url);
     setShowForm(false);
     setError("");
+    setReviewFields([]);
     // stash file for API
     (window as unknown as { __scanFile?: File }).__scanFile = file;
   }
@@ -48,6 +51,16 @@ export default function ScanPage() {
         if (res.ok) {
           const j = await res.json();
           data = j.extracted;
+          const missing: string[] = j.missing ?? [];
+          const label: Record<string, string> = {
+            type: "type",
+            description: "description",
+            amount: "amount",
+            date: "date",
+            category: "category",
+            payment_status: "payment status",
+          };
+          setReviewFields(missing.map((k) => label[k] ?? k));
         }
       }
       // fallback demo extraction
@@ -57,18 +70,19 @@ export default function ScanPage() {
           type: "expense",
           description: "Stock purchase from photo",
           amount: 25000,
-          date: toISODate(new Date()),
+          date: localDateISO(),
           category: "Inventory / Stock",
           payment_status: "paid",
           payment_method: "Cash",
         };
       }
+      const type = data.type === "income" ? "income" : "expense";
       setResult({
-        type: data.type ?? "expense",
+        type,
         description: data.description ?? "",
         amount: String(data.amount ?? ""),
-        date: data.date ?? toISODate(new Date()),
-        category: data.category ?? "Inventory / Stock",
+        date: data.date ?? localDateISO(),
+        category: data.category ?? (type === "income" ? "Sales" : "Inventory / Stock"),
         payment_status: data.payment_status ?? "paid",
         payment_method: data.payment_method ?? "Cash",
       });
@@ -107,7 +121,7 @@ export default function ScanPage() {
         <h1 className="text-[22px] font-extrabold text-[#0F5132]">Scan a Record 📷</h1>
         <Link href="/scan/history" className="text-[13px] font-bold text-[#167C5A]">History</Link>
       </div>
-      <p className="mt-1 text-[14px] text-gray-600">Have paper records? Snap a photo and Ledgerly will turn them into digital transactions.</p>
+      <p className="mt-1 text-[14px] text-gray-600">Have paper records? Snap a photo and Credyt will turn them into digital transactions.</p>
 
       {!preview && (
         <Card className="mt-4 border-2 border-dashed !border-[#167C5A]/40 text-center">
@@ -161,11 +175,18 @@ export default function ScanPage() {
               <p>Amount: <b>{result.amount ? formatNaira(Number(String(result.amount).replace(/,/g, "")) || 0) : "—"}</b></p>
               <p>Date: <b>{result.date}</b> · Type: <b>{result.type}</b></p>
             </div>
+            {reviewFields.length > 0 && (
+              <p className="rounded-xl bg-amber-50 px-4 py-2 text-[13px] text-amber-800">
+                We couldn&apos;t read {reviewFields.join(", ")} clearly — please fill it in.
+              </p>
+            )}
             <Input label="Description" value={result.description} onChange={(e) => setResult({ ...result, description: e.target.value })} />
             <Input label="Amount (₦)" inputMode="numeric" value={result.amount} onChange={(e) => setResult({ ...result, amount: e.target.value })} />
             <Input label="Date" type="date" value={result.date} onChange={(e) => setResult({ ...result, date: e.target.value })} />
             <Select label="Category" value={result.category} onChange={(e) => setResult({ ...result, category: e.target.value })}>
-              {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {(result.type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
             </Select>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" onClick={() => setShowForm(false)}>Edit details</Button>

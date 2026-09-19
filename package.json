@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:apply": "node scripts/apply-schema.cjs",
     "test": "node --test tests/",
-    "db:apply": "node scripts/apply-schema.cjs"
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -16,6 +17,7 @@
     "@supabase/supabase-js": "^2.116.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "groq-sdk": "^1.6.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^1.47.0",
     "next": "16.3.5",
