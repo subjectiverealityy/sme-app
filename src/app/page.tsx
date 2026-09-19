@@ -20,6 +20,14 @@ const FAQS = [
   { q: "Is my data private?", a: "Yes. Every business only sees its own records, enforced at the database level with Row Level Security." },
 ];
 
+const NAV_LINKS: [string, string][] = [
+  ["Live demo", "#demo"],
+  ["Features", "#features"],
+  ["Ask AI", "#ai"],
+  ["Stories", "#stories"],
+  ["FAQ", "#faq"],
+];
+
 function useCountUp(target: number, start: boolean, duration = 1400) {
   const [val, setVal] = useState(0);
   useEffect(() => {
@@ -40,9 +48,9 @@ function useCountUp(target: number, start: boolean, duration = 1400) {
 function LandingNav({ loggedIn }: { loggedIn: boolean }) {
   const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 text-[#17221D] backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
+    <header className="sticky top-0 z-50 border-b border-gray-100/80 bg-white/90 text-[#17221D] backdrop-blur-lg">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2" aria-label="Credyt home">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#29224e] shadow-[0_3px_0_#160f4b]">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M18.3 7.1A7.2 7.2 0 1 0 17.7 17" stroke="#70D7C0" strokeWidth="2.7" strokeLinecap="round" />
@@ -50,50 +58,57 @@ function LandingNav({ loggedIn }: { loggedIn: boolean }) {
               <circle cx="18.5" cy="6.4" r="1.55" fill="#70D7C0" />
             </svg>
           </span>
-          <span className="text-xl font-extrabold text-[#18122f]">Cred<span className="text-[#11b7ab]">yt</span></span>
+          <span className="text-xl font-extrabold tracking-tight text-[#18122f]">Cred<span className="text-[#11b7ab]">yt</span></span>
         </Link>
-        <nav className="hidden items-center gap-6 text-[14px] font-semibold text-gray-600 md:flex">
-          <a href="#demo" className="hover:text-[#29224e]">Live demo</a>
-          <a href="#features" className="hover:text-[#29224e]">Features</a>
-          <a href="#ai" className="hover:text-[#29224e]">Ask AI</a>
-          <a href="#stories" className="hover:text-[#29224e]">Stories</a>
-          <a href="#faq" className="hover:text-[#29224e]">FAQ</a>
+        <nav className="hidden items-center gap-6 text-[14px] font-semibold text-gray-600 md:flex" aria-label="Main">
+          {NAV_LINKS.map(([label, href]) => (
+            <a key={href} href={href} className="rounded-lg px-2 py-1.5 transition-colors hover:text-[#29224e]">{label}</a>
+          ))}
         </nav>
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-3 md:flex">
           {loggedIn ? (
-            <Link href="/dashboard" className="rounded-xl bg-[#29224e] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#3b3267]">
+            <Link href="/dashboard" className="rounded-xl bg-[#29224e] px-4 py-2.5 text-[14px] font-bold text-white shadow-sm transition hover:bg-[#3b3267]">
               Open dashboard →
             </Link>
           ) : (
             <>
-              <Link href="/login" className="rounded-xl px-4 py-2.5 text-[14px] font-bold text-gray-600 hover:text-[#29224e]">
+              <Link href="/login" className="rounded-xl px-4 py-2.5 text-[14px] font-bold text-gray-600 transition-colors hover:text-[#29224e]">
                 Log in
               </Link>
-              <Link href="/signup" className="rounded-xl bg-[#29224e] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#3b3267]">
+              <Link href="/signup" className="rounded-xl bg-[#29224e] px-4 py-2.5 text-[14px] font-bold text-white shadow-sm transition hover:bg-[#3b3267]">
                 Get started free
               </Link>
             </>
           )}
         </div>
-        <button className="rounded-lg px-3 py-2 font-bold md:hidden" onClick={() => setOpen((v) => !v)} aria-label="Menu">
-          ☰
+        <button
+          className="rounded-lg p-2 -mr-1 text-[#29224e] md:hidden"
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Toggle menu"
+          aria-expanded={open}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
         </button>
       </div>
       {open && (
-        <div className="border-t border-gray-100 bg-white px-4 py-3 md:hidden">
-          <div className="flex flex-col gap-1 text-[15px] font-semibold">
-            {[["Live demo", "#demo"], ["Features", "#features"], ["Ask AI", "#ai"], ["Stories", "#stories"], ["FAQ", "#faq"]].map(([l, h]) => (
-              <a key={h} href={h} onClick={() => setOpen(false)} className="rounded-lg px-2 py-2.5 hover:bg-[#d9f5ed]">{l}</a>
+        <div className="border-t border-gray-100 bg-white px-4 py-4 md:hidden">
+          <nav className="flex flex-col gap-1 text-[15px] font-semibold" aria-label="Mobile">
+            {NAV_LINKS.map(([label, href]) => (
+              <a key={href} href={href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-3 transition-colors hover:bg-[#d9f5ed]">{label}</a>
             ))}
-            {loggedIn ? (
-              <Link href="/dashboard" className="mt-1 rounded-xl bg-[#29224e] px-4 py-3 text-center font-bold text-white">Open dashboard →</Link>
-            ) : (
-              <div className="mt-1 grid grid-cols-2 gap-2">
-                <Link href="/login" className="rounded-xl border border-gray-200 px-4 py-3 text-center font-bold">Log in</Link>
-                <Link href="/signup" className="rounded-xl bg-[#29224e] px-4 py-3 text-center font-bold text-white">Get started</Link>
-              </div>
-            )}
-          </div>
+            <div className="mt-2 border-t border-gray-100 pt-3">
+              {loggedIn ? (
+                <Link href="/dashboard" onClick={() => setOpen(false)} className="rounded-xl bg-[#29224e] px-4 py-3 text-center font-bold text-white">Open dashboard →</Link>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/login" onClick={() => setOpen(false)} className="rounded-xl border border-gray-200 px-4 py-3 text-center font-bold">Log in</Link>
+                  <Link href="/signup" onClick={() => setOpen(false)} className="rounded-xl bg-[#29224e] px-4 py-3 text-center font-bold text-white">Get started</Link>
+                </div>
+              )}
+            </div>
+          </nav>
         </div>
       )}
     </header>
@@ -105,19 +120,19 @@ function Hero({ loggedIn }: { loggedIn: boolean }) {
     <section className="relative overflow-hidden bg-[#faf7f2] text-[#272047]">
       <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[#d9f5ed] blur-3xl" />
       <div className="pointer-events-none absolute -right-24 top-32 h-72 w-72 rounded-full bg-[#fce0d3]/70 blur-3xl" />
-      <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-4 pb-14 pt-12 md:grid-cols-2 md:pt-20">
+      <div className="relative mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-14 pt-12 sm:px-6 md:grid-cols-2 md:gap-8 md:pt-20 lg:px-8">
         <div className="animate-fade-up">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#d9f5ed] px-3 py-1.5 text-[12px] font-bold tracking-wide text-[#272047]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#11b7ab]/20 bg-[#d9f5ed] px-3 py-1.5 text-[12px] font-bold tracking-wide text-[#272047]">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[#11b7ab]" /> BUILT FOR NIGERIAN SMALL BUSINESSES
           </span>
-          <h1 className="mt-4 text-[34px] font-extrabold leading-[1.08] text-[#29224e] md:text-[52px]">
+          <h1 className="mt-4 text-balance text-[34px] font-extrabold leading-[1.08] tracking-tight text-[#29224e] sm:text-[42px] md:text-[52px] lg:text-[56px]">
             Know who owes you, <span className="text-[#0b938e]">without the awkwardness.</span>
           </h1>
-          <p className="mt-3 max-w-md text-[15px] leading-relaxed text-gray-600 md:text-[17px]">
+          <p className="mt-3 max-w-md text-pretty text-[15px] leading-relaxed text-gray-600 sm:text-[16px] md:text-[17px]">
             Keep debtor details, payment status, promises, and gentle WhatsApp reminders in one calm place.
           </p>
-          <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-            <Link href={loggedIn ? "/dashboard" : "/signup"} className="rounded-2xl bg-[#29224e] px-6 py-3.5 text-center text-[16px] font-extrabold text-white shadow-lg transition hover:scale-[1.02] hover:bg-[#3b3267]">
+          <div className="mt-6 flex flex-col gap-2 sm:max-w-md sm:flex-row sm:items-center">
+            <Link href={loggedIn ? "/dashboard" : "/signup"} className="rounded-2xl bg-[#29224e] px-6 py-3.5 text-center text-[16px] font-extrabold text-white shadow-lg shadow-[#29224e]/20 transition hover:scale-[1.02] hover:bg-[#3b3267]">
               {loggedIn ? "Continue to dashboard →" : "Create free account →"}
             </Link>
             <a href="#demo" className="rounded-2xl border border-[#11b7ab]/40 bg-white px-6 py-3.5 text-center text-[16px] font-bold text-[#29224e] transition hover:bg-[#d9f5ed]">
@@ -130,17 +145,41 @@ function Hero({ loggedIn }: { loggedIn: boolean }) {
                 <span key={i} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#d9f5ed] text-[11px] font-extrabold text-[#272047]">{i}</span>
               ))}
             </div>
-            Loved by shops, vendors & freelancers
+            <span className="text-pretty">Loved by shops, vendors &amp; freelancers</span>
           </div>
         </div>
 
-        <div className="animate-pop-in rounded-3xl border border-[#e9e3da] bg-white p-5 text-[#272047] shadow-xl">
+        <div className="animate-pop-in mx-auto w-full max-w-md rounded-3xl border border-[#e9e3da] bg-white p-5 text-[#272047] shadow-xl md:max-w-none">
           <div className="flex items-center justify-between">
             <p className="text-[13px] font-bold uppercase tracking-wide text-gray-400">A calmer way to collect</p>
             <span className="rounded-full bg-[#d9f5ed] px-2.5 py-1 text-[12px] font-bold text-[#272047]">CREDYT</span>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-2"><div className="rounded-2xl bg-[#29224e] p-4 text-white"><p className="text-[11px] font-bold uppercase opacity-70">Money owed</p><p className="mt-2 text-[25px] font-extrabold">₦173,500</p><p className="mt-1 text-[11px] opacity-70">3 open balances</p></div><div className="rounded-2xl bg-[#70d7c0] p-4 text-[#272047]"><p className="text-[11px] font-bold uppercase opacity-70">Due today</p><p className="mt-2 text-[25px] font-extrabold">2</p><p className="mt-1 text-[11px] opacity-70">gentle follow-ups</p></div></div>
-          <div className="mt-3 rounded-2xl border border-[#eee9e3] p-3"><div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#70d7c0] text-[11px] font-extrabold">AO</span><span className="flex-1"><b className="block text-[13px]">Amaka Okafor</b><span className="text-[11px] text-gray-500">45 days old · no reminder yet</span></span><b className="text-[13px]">₦127,000</b></div><div className="mt-3 flex items-center justify-between rounded-xl bg-[#d9f5ed] px-3 py-2 text-[12px] font-bold text-[#272047]"><span>Send a kind reminder</span><span>WhatsApp →</span></div></div>
+          <div className="mt-4 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+            <div className="rounded-2xl bg-[#29224e] p-4 text-white">
+              <p className="text-[11px] font-bold uppercase opacity-70">Money owed</p>
+              <p className="mt-2 text-[25px] font-extrabold tracking-tight">₦173,500</p>
+              <p className="mt-1 text-[11px] opacity-70">3 open balances</p>
+            </div>
+            <div className="rounded-2xl bg-[#70d7c0] p-4 text-[#272047]">
+              <p className="text-[11px] font-bold uppercase opacity-70">Due today</p>
+              <p className="mt-2 text-[25px] font-extrabold tracking-tight">2</p>
+              <p className="mt-1 text-[11px] opacity-70">gentle follow-ups</p>
+            </div>
+          </div>
+          <div className="mt-3 rounded-2xl border border-[#eee9e3] p-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#70d7c0] text-[11px] font-extrabold">AO</span>
+              <span className="min-w-0 flex-1">
+                <b className="block truncate text-[13px]">Amaka Okafor</b>
+                <span className="text-[11px] text-gray-500">45 days old · no reminder yet</span>
+              </span>
+              <b className="text-[13px]">₦127,000</b>
+            </div>
+            <div className="mt-3 flex items-center justify-between rounded-xl bg-[#d9f5ed] px-3 py-2 text-[12px] font-bold text-[#272047]">
+              <span>Send a kind reminder</span>
+              <span>WhatsApp →</span>
+            </div>
+          </div>
         </div>
       </div>
       {/* marquee */}
@@ -176,11 +215,11 @@ function Stats() {
     [`${c}%`, "no accounting jargon"],
   ];
   return (
-    <section ref={ref} className="mx-auto grid w-full max-w-6xl grid-cols-3 gap-2 px-4 py-8">
+    <section ref={ref} className="mx-auto grid w-full max-w-7xl grid-cols-3 gap-2 px-4 py-8 sm:gap-4 sm:px-6 lg:px-8">
       {items.map(([v, l]) => (
-        <div key={l} className="rounded-2xl bg-white p-4 text-center shadow-sm">
-          <p className="text-[22px] font-extrabold text-[#0F5132] md:text-[30px]">{v}</p>
-          <p className="text-[12px] text-gray-500 md:text-[14px]">{l}</p>
+        <div key={l} className="rounded-2xl bg-white p-4 text-center shadow-sm sm:p-5">
+          <p className="text-[22px] font-extrabold tracking-tight text-[#0F5132] sm:text-[26px] md:text-[30px]">{v}</p>
+          <p className="mt-0.5 text-[12px] text-gray-500 md:text-[14px]">{l}</p>
         </div>
       ))}
     </section>
@@ -195,23 +234,23 @@ function FeatureTabs() {
     ask: { icon: "✨", title: "Ask about your business", body: "Chat with your own data. Real figures calculated from your records, explained in plain language.", points: ["How much did I make?", "Where did I spend most?", "Compare this vs last month"] },
   }[tab];
   return (
-    <section id="features" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-10">
-      <h2 className="text-center text-[26px] font-extrabold text-[#0F5132] md:text-[34px]">Everything, minus the headache</h2>
-      <div className="mx-auto mt-5 flex max-w-md gap-2 rounded-2xl bg-white p-1.5 shadow-sm">
+    <section id="features" className="mx-auto w-full max-w-7xl scroll-mt-20 px-4 py-10 sm:px-6 lg:px-8">
+      <h2 className="text-balance text-center text-[26px] font-extrabold tracking-tight text-[#0F5132] sm:text-[30px] md:text-[34px]">Everything, minus the headache</h2>
+      <div className="mx-auto mt-5 flex w-full max-w-md gap-1 rounded-2xl bg-white p-1.5 shadow-sm">
         {(["record", "scan", "ask"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 rounded-xl px-3 py-2.5 text-[14px] font-bold transition ${tab === t ? "bg-[#167C5A] text-white shadow" : "text-gray-500 hover:text-[#0F5132]"}`}>
+          <button key={t} onClick={() => setTab(t)} className={`flex-1 truncate rounded-xl px-2 py-2.5 text-[13px] font-bold transition sm:px-3 sm:text-[14px] ${tab === t ? "bg-[#167C5A] text-white shadow" : "text-gray-500 hover:text-[#0F5132]"}`}>
             {t === "record" ? "⚡ Record" : t === "scan" ? "📷 Scan" : "✨ Ask AI"}
           </button>
         ))}
       </div>
-      <div key={tab} className="animate-pop-in mx-auto mt-4 max-w-2xl rounded-3xl bg-white p-6 shadow-sm md:p-8">
-        <p className="text-4xl">{content.icon}</p>
-        <h3 className="mt-2 text-[22px] font-extrabold">{content.title}</h3>
-        <p className="mt-1 text-[15px] text-gray-600">{content.body}</p>
+      <div key={tab} className="animate-pop-in mx-auto mt-4 w-full max-w-2xl rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+        <p className="text-4xl" aria-hidden>{content.icon}</p>
+        <h3 className="mt-2 text-[20px] font-extrabold tracking-tight sm:text-[22px]">{content.title}</h3>
+        <p className="mt-1 text-pretty text-[15px] text-gray-600">{content.body}</p>
         <ul className="mt-3 flex flex-col gap-2">
           {content.points.map((p) => (
             <li key={p} className="flex items-center gap-2 rounded-xl bg-[#F8FAF9] px-3 py-2.5 text-[14px] font-medium">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#DDF5EA] text-[13px] font-bold text-[#0F5132]">✓</span>{p}
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#DDF5EA] text-[13px] font-bold text-[#0F5132]">✓</span>{p}
             </li>
           ))}
         </ul>
@@ -228,14 +267,14 @@ function Steps() {
   ];
   return (
     <section className="bg-white py-12">
-      <div className="mx-auto w-full max-w-6xl px-4">
-        <h2 className="text-center text-[24px] font-extrabold text-[#0F5132] md:text-[30px]">From download to dashboard in 2 minutes</h2>
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-balance text-center text-[24px] font-extrabold tracking-tight text-[#0F5132] sm:text-[28px] md:text-[30px]">From download to dashboard in 2 minutes</h2>
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
           {steps.map(([n, t, d]) => (
             <div key={n} className="rounded-2xl bg-[#F8FAF9] p-5 transition hover:-translate-y-1 hover:shadow-md">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#167C5A] text-lg font-extrabold text-white">{n}</span>
               <p className="mt-3 font-extrabold">{t}</p>
-              <p className="text-[14px] text-gray-600">{d}</p>
+              <p className="text-pretty text-[14px] text-gray-600">{d}</p>
             </div>
           ))}
         </div>
@@ -269,12 +308,12 @@ function AiDemo() {
     }, 30);
   };
   return (
-    <section id="ai" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-10">
-      <div className="grid gap-6 overflow-hidden rounded-3xl border border-[#11b7ab]/20 bg-white p-6 shadow-sm md:grid-cols-2 md:p-10">
+    <section id="ai" className="mx-auto w-full max-w-7xl scroll-mt-20 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="grid gap-6 overflow-hidden rounded-3xl border border-[#11b7ab]/20 bg-white p-6 shadow-sm sm:p-8 md:grid-cols-2 md:gap-8 md:p-10">
         <div>
           <span className="rounded-full bg-[#d9f5ed] px-3 py-1 text-[12px] font-bold text-[#272047]">✨ ASK CREDYT — LIVE PREVIEW</span>
-          <h2 className="mt-3 text-[26px] font-extrabold leading-tight text-[#29224e] md:text-[32px]">Ask in plain English. Get clear answers.</h2>
-          <p className="mt-2 text-[14px] text-gray-600">Tap a question to see how Credyt answers from actual debtor records — never made-up figures.</p>
+          <h2 className="mt-3 text-balance text-[26px] font-extrabold leading-tight tracking-tight text-[#29224e] sm:text-[30px] md:text-[32px]">Ask in plain English. Get clear answers.</h2>
+          <p className="mt-2 text-pretty text-[14px] text-gray-600">Tap a question to see how Credyt answers from actual debtor records — never made-up figures.</p>
           <div className="mt-4 flex flex-col gap-2">
             {Object.keys(AI_QA).map((q) => (
               <button key={q} onClick={() => ask(q)} className={`rounded-2xl border px-4 py-3 text-left text-[14px] font-semibold transition ${active === q ? "border-[#167C5A] bg-[#DDF5EA] text-[#0F5132]" : "border-gray-100 bg-[#F8FAF9] hover:border-[#167C5A]/40"}`}>
@@ -287,8 +326,8 @@ function AiDemo() {
           {!active && <p className="m-auto text-center text-[14px] text-gray-400">👆 Tap a question to see the magic</p>}
           {active && (
             <>
-              <p className="self-end rounded-2xl bg-[#167C5A] px-4 py-2.5 text-[14px] font-medium text-white">{active}</p>
-              <p className="mt-2 self-start rounded-2xl bg-[#F8FAF9] px-4 py-2.5 text-[14px] leading-relaxed shadow-sm">
+              <p className="max-w-[80%] self-end rounded-2xl bg-[#167C5A] px-4 py-2.5 text-[14px] font-medium text-white">{active}</p>
+              <p className="mt-2 max-w-[85%] self-start rounded-2xl bg-[#F8FAF9] px-4 py-2.5 text-[14px] leading-relaxed shadow-sm">
                 {shown}
                 {typing && <span className="ml-1 inline-block h-3 w-1 animate-pulse bg-[#167C5A]" />}
               </p>
@@ -311,14 +350,14 @@ function DemoStrip() {
     []
   );
   return (
-    <section id="demo" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-6">
+    <section id="demo" className="mx-auto w-full max-w-7xl scroll-mt-20 px-4 py-6 sm:px-6 lg:px-8">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="animate-float rounded-3xl border border-gray-100 bg-white p-5 shadow-lg">
           <p className="text-[13px] font-bold text-gray-400">GOOD MORNING, ADA</p>
           <div className="mt-2 grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-2xl bg-[#29224e] p-3 text-white"><p className="text-[11px] font-bold opacity-80">Money owed</p><p className="font-extrabold">₦173k</p></div>
-            <div className="rounded-2xl bg-[#70d7c0] p-3"><p className="text-[11px] font-bold text-[#272047]">Follow-ups</p><p className="font-extrabold text-[#272047]">2 due</p></div>
-            <div className="rounded-2xl bg-[#f69a72] p-3"><p className="text-[11px] font-bold text-[#272047]">Reminders</p><p className="font-extrabold text-[#272047]">0 sent</p></div>
+            <div className="rounded-2xl bg-[#29224e] p-3 text-white"><p className="text-[11px] font-bold opacity-80">Money owed</p><p className="text-[16px] font-extrabold tracking-tight">₦173k</p></div>
+            <div className="rounded-2xl bg-[#70d7c0] p-3"><p className="text-[11px] font-bold text-[#272047]">Follow-ups</p><p className="text-[16px] font-extrabold tracking-tight text-[#272047]">2 due</p></div>
+            <div className="rounded-2xl bg-[#f69a72] p-3"><p className="text-[11px] font-bold text-[#272047]">Reminders</p><p className="text-[16px] font-extrabold tracking-tight text-[#272047]">0 sent</p></div>
           </div>
           <div className="mt-3 rounded-2xl border border-[#eee9e3] p-3 text-[12px] text-gray-500">A clear little list of who needs a nudge, without the awkwardness.</div>
         </div>
@@ -327,9 +366,15 @@ function DemoStrip() {
           <div className="mt-2 flex flex-col gap-2">
             {txns.map((t) => (
               <div key={t.d} className="flex items-center gap-3 rounded-2xl bg-[#F8FAF9] p-3 transition hover:scale-[1.01]">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#70d7c0] text-[11px] font-extrabold text-[#272047]">{t.icon}</span>
-                <span className="flex-1"><span className="block text-[14px] font-bold">{t.d}</span><span className="text-[12px] text-gray-500">{t.t}</span></span>
-                <span className="text-right"><span className="block font-extrabold">{t.a}</span><span className="text-[11px] text-[#0b938e]">{t.status}</span></span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#70d7c0] text-[11px] font-extrabold text-[#272047]">{t.icon}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-bold">{t.d}</span>
+                  <span className="truncate text-[12px] text-gray-500">{t.t}</span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="block text-[14px] font-extrabold">{t.a}</span>
+                  <span className="text-[11px] text-[#0b938e]">{t.status}</span>
+                </span>
               </div>
             ))}
           </div>
@@ -348,10 +393,10 @@ function Stories() {
   const s = TESTIMONIALS[i];
   return (
     <section id="stories" className="bg-white py-12">
-      <div className="mx-auto w-full max-w-3xl px-4 text-center">
-        <h2 className="text-[24px] font-extrabold text-[#0F5132] md:text-[30px]">Shop owners are keeping better records</h2>
-        <div key={i} className="animate-pop-in mt-6 rounded-3xl bg-[#F8FAF9] p-6 md:p-8">
-          <p className="text-[17px] leading-relaxed">“{s.text}”</p>
+      <div className="mx-auto w-full max-w-3xl px-4 text-center sm:px-6">
+        <h2 className="text-balance text-center text-[24px] font-extrabold tracking-tight text-[#0F5132] sm:text-[28px] md:text-[30px]">Shop owners are keeping better records</h2>
+        <div key={i} className="animate-pop-in mt-6 rounded-3xl bg-[#F8FAF9] p-6 sm:p-8">
+          <p className="text-pretty text-[16px] leading-relaxed sm:text-[17px]">“{s.text}”</p>
           <p className="mt-3 font-extrabold text-[#0F5132]">{s.name} <span className="font-normal text-gray-500">· {s.biz}</span></p>
         </div>
         <div className="mt-4 flex justify-center gap-2">
@@ -367,15 +412,15 @@ function Stories() {
 function Faq() {
   const [open, setOpen] = useState<number | null>(0);
   return (
-    <section id="faq" className="mx-auto w-full max-w-3xl scroll-mt-20 px-4 py-10">
-      <h2 className="text-center text-[24px] font-extrabold text-[#0F5132]">Questions? Answered.</h2>
+    <section id="faq" className="mx-auto w-full max-w-3xl scroll-mt-20 px-4 py-10 sm:px-6">
+      <h2 className="text-balance text-center text-[24px] font-extrabold tracking-tight text-[#0F5132] sm:text-[28px]">Questions? Answered.</h2>
       <div className="mt-4 flex flex-col gap-2">
         {FAQS.map((f, idx) => (
           <div key={f.q} className="overflow-hidden rounded-2xl bg-white shadow-sm">
-            <button onClick={() => setOpen(open === idx ? null : idx)} className="flex w-full items-center justify-between px-4 py-4 text-left font-bold">
-              {f.q}<span className={`transition ${open === idx ? "rotate-45" : ""}`}>＋</span>
+            <button onClick={() => setOpen(open === idx ? null : idx)} className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left font-bold" aria-expanded={open === idx}>
+              {f.q}<span className={`shrink-0 transition ${open === idx ? "rotate-45" : ""}`}>＋</span>
             </button>
-            {open === idx && <p className="animate-fade-up px-4 pb-4 text-[14px] text-gray-600">{f.a}</p>}
+            {open === idx && <p className="animate-fade-up text-pretty px-4 pb-4 text-[14px] text-gray-600">{f.a}</p>}
           </div>
         ))}
       </div>
@@ -386,40 +431,42 @@ function Faq() {
 export default function Home() {
   const { user } = useStore();
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       <LandingNav loggedIn={!!user} />
-      <Hero loggedIn={!!user} />
-      <Stats />
-      <DemoStrip />
-      <FeatureTabs />
-      <Steps />
-      <AiDemo />
-      <Stories />
-      <Faq />
-      <section className="px-4 pb-10">
-        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-[#167C5A] p-8 text-center text-white md:p-12">
-          <div className="animate-blob pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
-          <h2 className="text-[26px] font-extrabold md:text-[36px]">Start tonight. Collect more calmly tomorrow.</h2>
-          <p className="mx-auto mt-2 max-w-md text-white/85">Join small businesses keeping their debtor records clear with Credyt.</p>
-          <div className="mx-auto mt-5 flex max-w-sm flex-col gap-2 sm:flex-row">
-            <Link href={user ? "/dashboard" : "/signup"} className="flex-1 rounded-2xl bg-white px-6 py-3.5 text-center font-extrabold text-[#0F5132]">
-              {user ? "Open dashboard →" : "Get started free →"}
-            </Link>
-            {!user && (
-              <Link href="/login" className="flex-1 rounded-2xl border border-white/40 px-6 py-3.5 text-center font-bold">
-                Log in
+      <main className="flex-1">
+        <Hero loggedIn={!!user} />
+        <Stats />
+        <DemoStrip />
+        <FeatureTabs />
+        <Steps />
+        <AiDemo />
+        <Stories />
+        <Faq />
+        <section className="px-4 pb-10 sm:px-6 lg:px-8">
+          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-[#167C5A] p-8 text-center text-white sm:p-10 md:p-12">
+            <div className="animate-blob pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+            <h2 className="text-balance mx-auto max-w-2xl text-[26px] font-extrabold leading-tight tracking-tight sm:text-[32px] md:text-[36px]">Start tonight. Collect more calmly tomorrow.</h2>
+            <p className="mx-auto mt-2 max-w-md text-pretty text-white/85">Join small businesses keeping their debtor records clear with Credyt.</p>
+            <div className="mx-auto mt-5 flex w-full max-w-sm flex-col gap-2 sm:flex-row">
+              <Link href={user ? "/dashboard" : "/signup"} className="flex-1 rounded-2xl bg-white px-6 py-3.5 text-center font-extrabold text-[#0F5132] shadow-sm transition hover:bg-white/90">
+                {user ? "Open dashboard →" : "Get started free →"}
               </Link>
-            )}
+              {!user && (
+                <Link href="/login" className="flex-1 rounded-2xl border border-white/40 px-6 py-3.5 text-center font-bold transition hover:bg-white/10">
+                  Log in
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
       <footer className="border-t border-gray-100 bg-white py-8">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 md:flex-row">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-3 px-4 text-center sm:px-6 md:flex-row md:text-left lg:px-8">
           <Logo />
-          <p className="text-[13px] text-gray-500">Simple records. Smarter business. · Made for Nigerian SMEs 🇳🇬</p>
+          <p className="text-pretty text-[13px] text-gray-500">Simple records. Smarter business. · Made for Nigerian SMEs 🇳🇬</p>
           <div className="flex gap-4 text-[14px] font-semibold text-gray-600">
-            <Link href="/login">Log in</Link>
-            <Link href="/signup">Sign up</Link>
+            <Link href="/login" className="transition-colors hover:text-[#29224e]">Log in</Link>
+            <Link href="/signup" className="transition-colors hover:text-[#29224e]">Sign up</Link>
           </div>
         </div>
       </footer>
