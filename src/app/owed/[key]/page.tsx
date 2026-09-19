@@ -9,10 +9,13 @@ import { useStore } from "@/lib/store";
 import type { ParsedReply, ReminderLanguage } from "@/lib/collections";
 import {
   ageLabel,
+  appendReplyLink,
   buildDebtReport,
   buildReminderMessage,
   clampStage,
   naira,
+  promiseFollowUp,
+  replyLink,
   waLink,
 } from "@/lib/collections";
 import { ComposeMessage, ConfirmButtons, LanguageToggle, Sheet } from "@/components/owed/ReminderCompose";
@@ -104,16 +107,23 @@ export default function OwedDetailPage() {
     try {
       const message = messages[confirming] ?? buildReminderMessage(inputsFor(confirming));
       const language = langs[confirming] ?? "english";
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const link = replyLink(origin, debt.transaction.id, {
+        business: business?.name,
+        debtor: row.name,
+        amount: debt.balance,
+      });
+      const finalMessage = appendReplyLink(message, link);
       await logReminder({
         transaction_id: debt.transaction.id,
         debtor_name: row.name,
         debtor_phone: row.phone.ok ? row.phone.e164 : "",
         stage: clampStage(debt.reminders.nextStage),
         language,
-        message,
+        message: finalMessage,
         status: "sent",
       });
-      if (row.phone.ok) window.open(waLink(row.phone.e164, message), "_blank");
+      if (row.phone.ok) window.open(waLink(row.phone.e164, finalMessage), "_blank");
       setConfirming(null);
     } finally {
       setBusy(false);
@@ -245,6 +255,7 @@ export default function OwedDetailPage() {
       {row.debts.map((debt) => {
         const txn = debt.transaction;
         const done = debt.balance <= 0;
+        const followUp = promiseFollowUp(txn.id, debtReplies);
         return (
           <Card key={txn.id} className="mt-3">
             <div className="flex items-start justify-between gap-2">
@@ -270,6 +281,33 @@ export default function OwedDetailPage() {
                 Last reminded {dateShort(debt.reminders.lastSentAt)} · stage {debt.reminders.nextStage}/3 ·{" "}
                 {debt.reminders.canSend ? "can remind again" : "cooling off (max 3 / 14 days)"}
               </p>
+            )}
+
+            {!done && followUp.due && (
+              <div className="mt-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2">
+                <p className="text-[13px] font-bold text-[#B91C1C]">
+                  Promise was for {dateShort(followUp.promisedDate)} — they&apos;re{" "}
+                  {followUp.daysLate === 0 ? "due today" : `${followUp.daysLate} day${followUp.daysLate === 1 ? "" : "s"} late`}.
+                </p>
+                <Button
+                  variant="outline"
+                  disabled={!row.phone.ok || !debt.reminders.canSend}
+                  className="mt-2 w-full !min-h-[36px] !text-[13px]"
+                  onClick={() => {
+                    const stage = Math.max(debt.reminders.nextStage, 2);
+                    setMessages((m) => ({
+                      ...m,
+                      [txn.id]: m[txn.id] ?? buildReminderMessage({ ...inputsFor(txn.id), stage }),
+                    }));
+                    setConfirming(txn.id);
+                  }}
+                >
+                  Send follow-up
+                </Button>
+                {debt.reminders.canSend === false && (
+                  <p className="mt-1 text-[12px] text-gray-500">Cooling off — max 3 reminders per 14 days.</p>
+                )}
+              </div>
             )}
 
             {debt.conversation.length > 0 && (

@@ -247,6 +247,41 @@ create policy "debtrep_owner_delete" on public.debt_replies for delete using (
   exists (select 1 from public.businesses b where b.id = debt_replies.business_id and b.owner_id = auth.uid())
 );
 
+-- ---------------------------------------------------------------------------
+-- Reply links: anonymous debtors answer a reminder via /r/<code>. The code is
+-- the transaction id of the debt. These security-definer RPCs let an
+-- unauthenticated caller append a DRAFT reply to the correct business, keyed
+-- by the code only — no other part of a business's data is reachable.
+-- ---------------------------------------------------------------------------
+
+drop function if exists public.record_debt_reply(uuid, text, text, date, numeric, numeric, text);
+create function public.record_debt_reply(
+  txn_id uuid,
+  raw_text text,
+  intent text,
+  promised_date date,
+  amount_mentioned numeric,
+  confidence numeric,
+  quote text
+) returns public.debt_replies
+language sql security definer set search_path = public stable
+as $$
+  insert into public.debt_replies (business_id, transaction_id, raw_text, intent,
+    promised_date, amount_mentioned, confidence, quote, status)
+  select t.business_id, t.id, raw_text,
+    coalesce(intent, 'none'),
+    promised_date::date,
+    round(amount_mentioned::numeric, 2),
+    round(confidence::numeric, 2),
+    quote,
+    'draft'
+  from public.transactions t
+  where t.id = txn_id
+  returning *;
+$$;
+revoke all on function public.record_debt_reply(uuid, text, text, date, numeric, numeric, text) from public;
+grant execute on function public.record_debt_reply(uuid, text, text, date, numeric, numeric, text) to anon, authenticated;
+
 -- Seed default categories (system, business_id null)
 insert into public.categories (business_id, name, type) values
   (null, 'Sales', 'income'), (null, 'Services', 'income'), (null, 'Other', 'income'),

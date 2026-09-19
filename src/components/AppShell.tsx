@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { BottomNav, Sidebar, SidebarProvider, useSidebar } from "@/components/Nav";
 import { cn } from "@/lib/utils";
 
-const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password"];
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/r"];
 
 function isPublic(pathname: string | null) {
   if (!pathname) return false;

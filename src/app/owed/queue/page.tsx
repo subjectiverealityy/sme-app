@@ -11,8 +11,10 @@ import {
   naira,
   ageLabel,
   waLink,
+  appendReplyLink,
   buildReminderMessage,
   clampStage,
+  replyLink,
 } from "@/lib/collections";
 import { ComposeMessage, ConfirmButtons, LanguageToggle, Sheet, StagePill } from "@/components/owed/ReminderCompose";
 
@@ -84,19 +86,26 @@ export default function OwedQueuePage() {
     setBusy(true);
     try {
       const stage = clampStage(reminderInputs(confirming).stage);
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const link = replyLink(origin, confirming.debts[0].transaction.id, {
+        business: business?.name,
+        debtor: confirming.name,
+        amount: confirming.totalOwed,
+      });
+      const finalMessage = appendReplyLink(message, link);
       await logReminder({
         transaction_id: confirming.debts[0].transaction.id,
         debtor_name: confirming.name,
         debtor_phone: confirming.phone.e164,
         stage,
         language,
-        message,
+        message: finalMessage,
         status: "sent",
       });
-      const link = waLink(confirming.phone.e164, message);
+      const linkHref = waLink(confirming.phone.e164, finalMessage);
       act(confirming, "remind");
       setConfirming(null);
-      if (typeof window !== "undefined") window.open(link, "_blank");
+      if (typeof window !== "undefined") window.open(linkHref, "_blank");
     } finally {
       setBusy(false);
     }

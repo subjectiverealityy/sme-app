@@ -69,6 +69,70 @@ export function waLink(e164: string, message: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Reply links — a short public URL the debtor can tap to answer a reminder
+// without the merchant having to type/paste anything back.
+// ---------------------------------------------------------------------------
+
+export interface ReplyLinkContext {
+  business?: string;
+  amount?: number;
+  debtor?: string;
+}
+
+/** Shareable `/r/<code>?…` link. The code is the reminder id. */
+export function replyLink(base: string, code: string, ctx: ReplyLinkContext = {}): string {
+  const p = new URLSearchParams();
+  if (ctx.business?.trim()) p.set("name", ctx.business.trim());
+  if (ctx.debtor?.trim()) p.set("debtor", ctx.debtor.trim());
+  if (typeof ctx.amount === "number" && Number.isFinite(ctx.amount) && ctx.amount > 0) {
+    p.set("amount", String(Math.round(ctx.amount)));
+  }
+  const q = p.toString();
+  return `${String(base).replace(/\/$/, "")}/r/${encodeURIComponent(String(code))}${q ? `?${q}` : ""}`;
+}
+
+/** Appends a reply-link line to a reminder message (kept separate so the
+ *  unit-tested templates never change shape). */
+export function appendReplyLink(message: string, link: string): string {
+  const L = String(link ?? "").trim();
+  const M = String(message ?? "").trimEnd();
+  if (!L || !M) return M || "";
+  return `${M}\n\nAnswer here and keep your balance updated: ${L}`;
+}
+
+// ---------------------------------------------------------------------------
+// Promise follow-ups — re-remind when a confirmed promise date has passed
+// ---------------------------------------------------------------------------
+
+export interface PromiseFollowUp {
+  due: boolean;
+  promisedDate: string | null;
+  daysLate: number;
+}
+
+/** Latest confirmed promise for a debt, flagged when its date has passed. */
+export function promiseFollowUp(
+  transactionId: string,
+  replies: DebtReply[],
+  reference: Date = new Date()
+): PromiseFollowUp {
+  const relevant = replies.filter(
+    (r) =>
+      r.transaction_id === transactionId &&
+      r.status === "confirmed" &&
+      r.intent === "promise_to_pay" &&
+      !!r.promised_date
+  );
+  const sorted = [...relevant].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+  const latest = sorted[0] ?? null;
+  if (!latest?.promised_date) return { due: false, promisedDate: null, daysLate: 0 };
+  const promised = startOfDay(new Date(latest.promised_date));
+  const ref = startOfDay(reference);
+  const daysLate = Math.max(0, Math.floor((ref.getTime() - promised.getTime()) / 86_400_000));
+  return { due: ref.getTime() >= promised.getTime(), promisedDate: latest.promised_date, daysLate };
+}
+
+// ---------------------------------------------------------------------------
 // Date / age helpers
 // ---------------------------------------------------------------------------
 

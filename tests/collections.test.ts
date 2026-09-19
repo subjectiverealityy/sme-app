@@ -19,6 +19,9 @@ import {
   parseReplyLocal,
   promisedDateFromText,
   extractNairaAmount,
+  replyLink,
+  appendReplyLink,
+  promiseFollowUp,
 } from "../src/lib/collections.ts";
 
 const txn = (over: Partial<Transaction> = {}): Transaction => ({
@@ -255,4 +258,85 @@ test("extractNairaAmount reads money out of chat text", () => {
   assert.equal(extractNairaAmount("I fit pay 5000 now"), 5000);
   assert.equal(extractNairaAmount("balance na \u20a620,000"), 20000);
   assert.equal(extractNairaAmount("no money"), null);
+});
+test("replyLink builds a short shareable link with context", () => {
+  const link = replyLink("https://app.ledgerly.ng/", "txn_1", {
+    business: "Ada's Fashion",
+    debtor: "Chidi",
+    amount: 20000,
+  });
+  assert.equal(
+    link,
+    "https://app.ledgerly.ng/r/txn_1?name=Ada%27s+Fashion&debtor=Chidi&amount=20000"
+  );
+});
+
+test("replyLink omits empty context and encodes special chars", () => {
+  const link = replyLink("https://x.com", "txn 9", { amount: 5000 });
+  assert.equal(link, "https://x.com/r/txn%209?amount=5000");
+});
+
+test("appendReplyLink shows the link on a fresh line", () => {
+  const out = appendReplyLink("Hello, please pay.", "https://x.com/r/txn_1");
+  assert.ok(out.startsWith("Hello, please pay."));
+  assert.ok(out.includes("\n\nAnswer here and keep your balance updated: https://x.com/r/txn_1"));
+});
+
+test("appendReplyLink with missing link returns the message unchanged", () => {
+  assert.equal(appendReplyLink("Hello.", ""), "Hello.");
+  assert.equal(appendReplyLink("Hello.", " "), "Hello.");
+});
+
+// --- Promise follow-ups ----------------------------------------------------
+
+const reply = (
+  intent: DebtReply["intent"],
+  promised_date: string | null,
+  status: DebtReply["status"] = "confirmed",
+  created_at = "2026-09-18T12:00:00Z"
+): DebtReply => ({
+  id: `rep_${Math.random().toString(36).slice(2, 8)}`,
+  business_id: "biz_demo",
+  transaction_id: "txn_1",
+  raw_text: "test",
+  intent,
+  promised_date,
+  amount_mentioned: null,
+  confidence: 0.9,
+  quote: "test",
+  status,
+  created_at,
+});
+
+test("promiseFollowUp flags a past confirmed promise as due", () => {
+  const now = new Date("2026-09-19"); // Saturday
+  // The 09-10 promise is the most recent one (created later) and has passed.
+  const fu = promiseFollowUp("txn_1", [
+    reply("promise_to_pay", "2026-09-25", "confirmed", "2026-09-15T10:00:00Z"),
+    reply("promise_to_pay", "2026-09-10", "confirmed", "2026-09-18T10:00:00Z"),
+  ], now);
+  assert.equal(fu.due, true);
+  assert.equal(fu.promisedDate, "2026-09-10");
+  assert.equal(fu.daysLate, 9);
+});
+
+test("promiseFollowUp uses only the latest confirmed promise", () => {
+  const now = new Date("2026-09-19");
+  // Latest (newest created_at) promise is in the future → not due
+  const fu = promiseFollowUp("txn_1", [
+    reply("promise_to_pay", "2026-09-25"), // confirmed
+  ], now);
+  assert.equal(fu.due, false);
+  assert.equal(fu.daysLate, 0);
+});
+
+test("promiseFollowUp ignores dismissed/draft replies and other intents", () => {
+  const now = new Date("2026-09-19");
+  const replies = [
+    reply("promise_to_pay", "2026-09-10", "draft"),
+    reply("dispute", "2026-09-10"),
+  ];
+  const fu = promiseFollowUp("txn_1", replies, now);
+  assert.equal(fu.due, false);
+  assert.equal(fu.promisedDate, null);
 });
