@@ -50,10 +50,11 @@ export default function SignupPage() {
     try {
       if (isSupabaseConfigured()) {
         const supabase = getSupabaseBrowser()!;
+        const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || "https://sme-app.vercel.app"}/onboarding`;
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password: pw,
-          options: { data: { full_name: name.trim() } },
+          options: { data: { full_name: name.trim() }, redirectTo },
         });
         if (error) throw error;
         const u = data.user;
