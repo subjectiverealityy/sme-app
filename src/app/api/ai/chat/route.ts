@@ -72,8 +72,9 @@ export async function POST(req: NextRequest) {
     const transactions: Txn[] = body.transactions ?? [];
     if (!question.trim()) return NextResponse.json({ answer: "Please ask a question." }, { status: 400 });
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    const { groq, hasGroqKey } = await import("@/lib/groq");
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!hasGroqKey() || !apiKey) {
       return NextResponse.json({ answer: localAnswer(question, transactions), provider: "local" });
     }
 
@@ -103,12 +104,9 @@ Verified figures (do NOT invent numbers, use these):
 - Record count: ${transactions.length}
 If data is missing say you don't have enough records. Question: ${question}`;
 
-    const { GoogleGenerativeAI } = await import("@google/generative-ai");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(context);
-    const text = result.response.text() || localAnswer(question, transactions);
-    return NextResponse.json({ answer: text, provider: "gemini" });
+    const text = (await groq([{ role: "user", content: context }], { temperature: 0.2, maxTokens: 800 })) ||
+      localAnswer(question, transactions);
+    return NextResponse.json({ answer: text, provider: "groq" });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ answer: "AI is unavailable right now. Try again shortly." }, { status: 500 });

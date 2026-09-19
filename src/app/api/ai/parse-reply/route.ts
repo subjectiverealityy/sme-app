@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ParsedReply } from "@/lib/collections";
 import { extractNairaAmount, parseReplyLocal, promisedDateFromText } from "@/lib/collections";
+import { groq, hasGroqKey } from "@/lib/groq";
 
 const SYSTEM = `You are a debt-collection assistant for a small Nigerian business. The user forwards a WhatsApp reply from a customer who owes money. Return ONLY a JSON object:
 { "intent": "promise_to_pay" | "part_payment" | "paid_claim" | "dispute" | "none", "promised_date": "YYYY-MM-DD or null", "amount_mentioned": integer or null, "quote": "short exact quote from the text" }
@@ -32,28 +33,33 @@ export async function POST(req: NextRequest) {
   if (!text) return NextResponse.json({ error: "Missing 'text'." }, { status: 400 });
 
   let parsed: ParsedReply | null = null;
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey) {
+  if (hasGroqKey()) {
     try {
-      const { GoogleGenerativeAI } = await import("@google/generative-ai");
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        generationConfig: { temperature: 0 },
-      });
-      const result = await model.generateContent(
-        `${SYSTEM}\n\nBusiness: ${body?.business_name ?? "unknown"}\nCustomer reply: "${text}"`
+      const raw = await groq(
+        [
+          { role: "system", content: SYSTEM },
+          {
+            role: "user",
+            content: `Business: ${body?.business_name ?? "unknown"}\nToday's date: ${new Date()
+              .toISOString()
+              .slice(0, 10)}\nCustomer reply: "${text}"`,
+          },
+        ],
+        { json: true, temperature: 0, maxTokens: 400 }
       );
-      const obj = safeParse(result.response.text());
+      const obj = safeParse(raw);
       if (obj && typeof obj.intent === "string") {
         const localAmount = extractNairaAmount(text);
+        // Date hints are resolved deterministically from "today" — the model
+        // never decides the promised date. It's only trusted for free-text
+        // dates (e.g. "25th of December") that carry no local hint.
+        const localDateHint = promisedDateFromText(text);
+        const modelDate = String(obj.promised_date ?? "");
+        const modelDateOk = /^\d{4}-\d{2}-\d{2}$/.test(modelDate) && +new Date(modelDate) > Date.now();
         parsed = {
           // The amount ALWAYS comes from the exact text match, never from the model.
           amount_mentioned: localAmount,
-          promised_date:
-            obj.promised_date && /^\d{4}-\d{2}-\d{2}$/.test(String(obj.promised_date))
-              ? String(obj.promised_date)
-              : promisedDateFromText(text),
+          promised_date: localDateHint ?? (modelDateOk ? modelDate : null),
           intent: (["promise_to_pay", "part_payment", "paid_claim", "dispute", "none"] as const).includes(
             obj.intent as ParsedReply["intent"]
           )
@@ -64,7 +70,7 @@ export async function POST(req: NextRequest) {
         };
       }
     } catch (e) {
-      console.error("parse-reply gemini failed:", e);
+      console.error("parse-reply groq failed:", e);
       parsed = null;
     }
   }
