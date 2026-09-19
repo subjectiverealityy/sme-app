@@ -85,13 +85,28 @@ export async function POST(req: NextRequest) {
     const transactions: Txn[] = body.transactions ?? [];
     if (!question.trim()) return NextResponse.json({ answer: "Please ask a question." }, { status: 400 });
 
-    const draft = parseRecordIntent(question);
-    const recordAction = draft ? { kind: "record-debtor", draft } : undefined;
-    const localDraftAnswer = draft
-      ? `Got it — ${draft.customer_or_vendor ? `${draft.customer_or_vendor} is ` : "This person is "}${draft.payment_status}. Check the debtor details below and save when ready.`
-      : localAnswer(question, transactions);
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return NextResponse.json({ answer: localDraftAnswer, provider: "local", action: recordAction });
+    const { groq, hasGroqKey } = await import("@/lib/groq");
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!hasGroqKey() || !apiKey) {
+      return NextResponse.json({ answer: localAnswer(question, transactions), provider: "local" });
+    }
+
+    // Compute structured aggregates server-side (never let model hallucinate numbers)
+    const now = new Date();
+    const inMonth = (d: string) => {
+      const x = new Date(d);
+      return x.getMonth() === now.getMonth() && x.getFullYear() === now.getFullYear();
+    };
+    const monthTx = transactions.filter((t) => inMonth(t.transaction_date));
+    const totalIn = transactions.filter((t) => t.type === "income").reduce((s, t) => s + Number(t.amount || 0), 0);
+    const totalOut = transactions.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount || 0), 0);
+    const monthIn = monthTx.filter((t) => t.type === "income").reduce((s, t) => s + Number(t.amount || 0), 0);
+    const monthOut = monthTx.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount || 0), 0);
+    const owed = transactions.filter((t) => t.type === "income" && t.payment_status !== "paid").reduce((s, t) => s + Number(t.amount || 0), 0);
+    const byCat: Record<string, number> = {};
+    for (const t of monthTx.filter((t) => t.type === "expense")) {
+      byCat[t.category] = (byCat[t.category] || 0) + Number(t.amount);
+    }
 
     const records = debtorRecords(transactions);
     const credit = records.filter((t) => normalizeStatus(t.payment_status) === "credit");
@@ -108,14 +123,9 @@ Verified figures:
 ${draft ? `The user wants to record a debtor. Draft: ${JSON.stringify(draft)}. Confirm the person and status in one short sentence. Do not claim it is saved; they still need to tap Save.` : ""}
 If the requested debtor information is missing, say so plainly. Question: ${question}`;
 
-    const { generateWithFallback } = await import("@/lib/gemini");
-    try {
-      const { text } = await generateWithFallback(context);
-      return NextResponse.json({ answer: text || localDraftAnswer, provider: "gemini", action: recordAction });
-    } catch (e) {
-      console.error("Gemini failed, using local answer:", e);
-      return NextResponse.json({ answer: localDraftAnswer, provider: "local-fallback", action: recordAction });
-    }
+    const text = (await groq([{ role: "user", content: context }], { temperature: 0.2, maxTokens: 800 })) ||
+      localAnswer(question, transactions);
+    return NextResponse.json({ answer: text, provider: "groq" });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ answer: "Credyt is unavailable right now. Try again shortly." }, { status: 500 });
