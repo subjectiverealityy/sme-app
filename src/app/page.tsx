@@ -4,20 +4,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useStore } from "@/lib/store";
-import { formatNaira } from "@/lib/utils";
 
 const SHOPS = ["Fashion", "Food vendors", "Retail shops", "Salons", "Catering", "Freelancers", "POS agents", "Boutiques"];
 
 const TESTIMONIALS = [
-  { name: "Adaeze", biz: "Fashion Hub, Lekki", text: "I record sales in seconds after closing shop. For the first time I actually know my profit." },
+  { name: "Adaeze", biz: "Fashion Hub, Lekki", text: "I finally know who needs a reminder, and I can send it without making things awkward." },
   { name: "Ibrahim", biz: "Food vendor, Abuja", text: "The scan feature turned my paper notebook into clean records. My bank statement finally makes sense." },
-  { name: "Funmi", biz: "Salon, Ikeja", text: "I ask 'where did I spend most?' and Ledgerly just tells me. No accounting grammar." },
+  { name: "Funmi", biz: "Salon, Ikeja", text: "I keep every interested customer visible, so good opportunities do not disappear in a notebook." },
 ];
 
 const FAQS = [
-  { q: "Do I need accounting knowledge?", a: "No. Ledgerly uses plain words — Money in, Money out, Profit, Money you're owed. If you can use WhatsApp, you can use Ledgerly." },
+  { q: "Do I need accounting knowledge?", a: "No. Credyt uses plain words — Paid, Credit, Interested, and Money owed. If you can use WhatsApp, you can use Credyt." },
   { q: "Does it work on my phone?", a: "Yes, it's mobile-first. Record transactions, scan receipts with your camera, and check reports — all from your phone." },
-  { q: "What about my paper records?", a: "Snap a photo on the Scan page. Ledgerly reads it and fills the form for you. You always confirm before saving." },
+  { q: "How do reminders work?", a: "Save a debtor's phone number, then choose Remind from the People table. Credyt opens a kind, prefilled WhatsApp message for you to review and send." },
   { q: "Is my data private?", a: "Yes. Every business only sees its own records, enforced at the database level with Row Level Security." },
 ];
 
@@ -44,34 +43,33 @@ function LandingNav({ loggedIn }: { loggedIn: boolean }) {
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 text-[#17221D] backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#167C5A]">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#29224e] shadow-[0_3px_0_#160f4b]">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="4" width="13" height="3" rx="1.5" fill="white" />
-              <rect x="3" y="9" width="9" height="3" rx="1.5" fill="white" opacity="0.9" />
-              <rect x="3" y="14" width="11" height="3" rx="1.5" fill="white" opacity="0.9" />
-              <circle cx="18.5" cy="16.5" r="3.5" fill="#0F5132" stroke="white" strokeWidth="1.2" />
+              <path d="M18.3 7.1A7.2 7.2 0 1 0 17.7 17" stroke="#70D7C0" strokeWidth="2.7" strokeLinecap="round" />
+              <path d="M8.1 9.4c2.4-.1 5.5.7 6.7 2.7 1.1 1.8.3 3.9-1.9 4.8" stroke="#70D7C0" strokeWidth="2.2" strokeLinecap="round" />
+              <circle cx="18.5" cy="6.4" r="1.55" fill="#70D7C0" />
             </svg>
           </span>
-          <span className="text-xl font-extrabold">Ledger<span className="text-[#167C5A]">ly</span></span>
+          <span className="text-xl font-extrabold text-[#18122f]">Cred<span className="text-[#11b7ab]">yt</span></span>
         </Link>
         <nav className="hidden items-center gap-6 text-[14px] font-semibold text-gray-600 md:flex">
-          <a href="#demo" className="hover:text-[#0F5132]">Live demo</a>
-          <a href="#features" className="hover:text-[#0F5132]">Features</a>
-          <a href="#ai" className="hover:text-[#0F5132]">Ask AI</a>
-          <a href="#stories" className="hover:text-[#0F5132]">Stories</a>
-          <a href="#faq" className="hover:text-[#0F5132]">FAQ</a>
+          <a href="#demo" className="hover:text-[#29224e]">Live demo</a>
+          <a href="#features" className="hover:text-[#29224e]">Features</a>
+          <a href="#ai" className="hover:text-[#29224e]">Ask AI</a>
+          <a href="#stories" className="hover:text-[#29224e]">Stories</a>
+          <a href="#faq" className="hover:text-[#29224e]">FAQ</a>
         </nav>
         <div className="hidden items-center gap-2 md:flex">
           {loggedIn ? (
-            <Link href="/dashboard" className="rounded-xl bg-[#167C5A] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#0F5132]">
+            <Link href="/dashboard" className="rounded-xl bg-[#29224e] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#3b3267]">
               Open dashboard →
             </Link>
           ) : (
             <>
-              <Link href="/login" className="rounded-xl px-4 py-2.5 text-[14px] font-bold text-gray-600 hover:text-[#0F5132]">
+              <Link href="/login" className="rounded-xl px-4 py-2.5 text-[14px] font-bold text-gray-600 hover:text-[#29224e]">
                 Log in
               </Link>
-              <Link href="/signup" className="rounded-xl bg-[#167C5A] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#0F5132]">
+              <Link href="/signup" className="rounded-xl bg-[#29224e] px-4 py-2.5 text-[14px] font-bold text-white hover:bg-[#3b3267]">
                 Get started free
               </Link>
             </>
@@ -85,14 +83,14 @@ function LandingNav({ loggedIn }: { loggedIn: boolean }) {
         <div className="border-t border-gray-100 bg-white px-4 py-3 md:hidden">
           <div className="flex flex-col gap-1 text-[15px] font-semibold">
             {[["Live demo", "#demo"], ["Features", "#features"], ["Ask AI", "#ai"], ["Stories", "#stories"], ["FAQ", "#faq"]].map(([l, h]) => (
-              <a key={h} href={h} onClick={() => setOpen(false)} className="rounded-lg px-2 py-2.5 hover:bg-[#DDF5EA]">{l}</a>
+              <a key={h} href={h} onClick={() => setOpen(false)} className="rounded-lg px-2 py-2.5 hover:bg-[#d9f5ed]">{l}</a>
             ))}
             {loggedIn ? (
-              <Link href="/dashboard" className="mt-1 rounded-xl bg-[#167C5A] px-4 py-3 text-center font-bold text-white">Open dashboard →</Link>
+              <Link href="/dashboard" className="mt-1 rounded-xl bg-[#29224e] px-4 py-3 text-center font-bold text-white">Open dashboard →</Link>
             ) : (
               <div className="mt-1 grid grid-cols-2 gap-2">
                 <Link href="/login" className="rounded-xl border border-gray-200 px-4 py-3 text-center font-bold">Log in</Link>
-                <Link href="/signup" className="rounded-xl bg-[#167C5A] px-4 py-3 text-center font-bold text-white">Get started</Link>
+                <Link href="/signup" className="rounded-xl bg-[#29224e] px-4 py-3 text-center font-bold text-white">Get started</Link>
               </div>
             )}
           </div>
@@ -103,66 +101,46 @@ function LandingNav({ loggedIn }: { loggedIn: boolean }) {
 }
 
 function Hero({ loggedIn }: { loggedIn: boolean }) {
-  // Interactive playground: today's sales vs spending
-  const [sales, setSales] = useState(45000);
-  const [spend, setSpend] = useState(15000);
-  const profit = sales - spend;
-
   return (
-    <section className="relative overflow-hidden bg-white text-[#17221D]">
-      <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[#DDF5EA] blur-3xl" />
-      <div className="pointer-events-none absolute -right-24 top-32 h-72 w-72 rounded-full bg-[#DDF5EA]/70 blur-3xl" />
+    <section className="relative overflow-hidden bg-[#faf7f2] text-[#272047]">
+      <div className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[#d9f5ed] blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 top-32 h-72 w-72 rounded-full bg-[#fce0d3]/70 blur-3xl" />
       <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-4 pb-14 pt-12 md:grid-cols-2 md:pt-20">
         <div className="animate-fade-up">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#DDF5EA] px-3 py-1.5 text-[12px] font-bold tracking-wide text-[#0F5132]">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-[#167C5A]" /> BUILT FOR NIGERIAN SMALL BUSINESSES
+          <span className="inline-flex items-center gap-2 rounded-full bg-[#d9f5ed] px-3 py-1.5 text-[12px] font-bold tracking-wide text-[#272047]">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[#11b7ab]" /> BUILT FOR NIGERIAN SMALL BUSINESSES
           </span>
-          <h1 className="mt-4 text-[34px] font-extrabold leading-[1.08] text-[#0F5132] md:text-[52px]">
-            Your business money, finally <span className="text-[#167C5A]">clear.</span>
+          <h1 className="mt-4 text-[34px] font-extrabold leading-[1.08] text-[#29224e] md:text-[52px]">
+            Know who owes you, <span className="text-[#0b938e]">without the awkwardness.</span>
           </h1>
           <p className="mt-3 max-w-md text-[15px] leading-relaxed text-gray-600 md:text-[17px]">
-            Record sales in seconds, scan paper records, and ask “how much did I make?” — no accounting headache.
+            Keep debtor details, payment status, promises, and gentle WhatsApp reminders in one calm place.
           </p>
           <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-            <Link href={loggedIn ? "/dashboard" : "/signup"} className="rounded-2xl bg-[#167C5A] px-6 py-3.5 text-center text-[16px] font-extrabold text-white shadow-lg transition hover:scale-[1.02] hover:bg-[#0F5132]">
+            <Link href={loggedIn ? "/dashboard" : "/signup"} className="rounded-2xl bg-[#29224e] px-6 py-3.5 text-center text-[16px] font-extrabold text-white shadow-lg transition hover:scale-[1.02] hover:bg-[#3b3267]">
               {loggedIn ? "Continue to dashboard →" : "Create free account →"}
             </Link>
-            <a href="#demo" className="rounded-2xl border border-[#167C5A]/30 bg-white px-6 py-3.5 text-center text-[16px] font-bold text-[#0F5132] transition hover:bg-[#DDF5EA]">
-              ▶ Try the live demo
+            <a href="#demo" className="rounded-2xl border border-[#11b7ab]/40 bg-white px-6 py-3.5 text-center text-[16px] font-bold text-[#29224e] transition hover:bg-[#d9f5ed]">
+              ▶ See how it works
             </a>
           </div>
           <div className="mt-5 flex items-center gap-3 text-[13px] text-gray-500">
             <div className="flex -space-x-2">
               {["AO", "IM", "FK"].map((i) => (
-                <span key={i} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#DDF5EA] text-[11px] font-extrabold text-[#0F5132]">{i}</span>
+                <span key={i} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#d9f5ed] text-[11px] font-extrabold text-[#272047]">{i}</span>
               ))}
             </div>
             Loved by shops, vendors & freelancers
           </div>
         </div>
 
-        {/* Interactive playground card */}
-        <div className="animate-pop-in rounded-3xl border border-gray-100 bg-white p-5 text-[#17221D] shadow-xl">
+        <div className="animate-pop-in rounded-3xl border border-[#e9e3da] bg-white p-5 text-[#272047] shadow-xl">
           <div className="flex items-center justify-between">
-            <p className="text-[13px] font-bold uppercase tracking-wide text-gray-400">Today&apos;s playground ✦ drag me</p>
-            <span className="rounded-full bg-[#DDF5EA] px-2.5 py-1 text-[12px] font-bold text-[#0F5132]">LIVE</span>
+            <p className="text-[13px] font-bold uppercase tracking-wide text-gray-400">A calmer way to collect</p>
+            <span className="rounded-full bg-[#d9f5ed] px-2.5 py-1 text-[12px] font-bold text-[#272047]">CREDYT</span>
           </div>
-          <div className="mt-3">
-            <div className="flex justify-between text-[14px] font-bold"><span>💰 Sales</span><span className="text-[#167C5A]">{formatNaira(sales)}</span></div>
-            <input type="range" min={5000} max={200000} step={1000} value={sales} onChange={(e) => setSales(Number(e.target.value))} className="mt-1 w-full accent-[#167C5A]" />
-          </div>
-          <div className="mt-3">
-            <div className="flex justify-between text-[14px] font-bold"><span>🧾 Spending</span><span className="text-red-600">{formatNaira(spend)}</span></div>
-            <input type="range" min={0} max={150000} step={1000} value={spend} onChange={(e) => setSpend(Number(e.target.value))} className="mt-1 w-full accent-red-500" />
-          </div>
-          <div className={`mt-4 rounded-2xl p-4 text-white transition ${profit >= 0 ? "bg-[#0F5132]" : "bg-red-600"}`}>
-            <p className="text-[13px] opacity-80">Your profit right now</p>
-            <p className="text-[30px] font-extrabold">{formatNaira(profit)}</p>
-            <p className="text-[13px] opacity-85">{profit >= 0 ? "🎉 You made money today. Ledgerly shows this instantly." : "⚠️ Spending passed sales — time to cut back."}</p>
-          </div>
-          <Link href="/signup" className="mt-3 block rounded-2xl bg-[#167C5A] py-3 text-center font-bold text-white hover:bg-[#0F5132]">
-            Get this for my business →
-          </Link>
+          <div className="mt-4 grid grid-cols-2 gap-2"><div className="rounded-2xl bg-[#29224e] p-4 text-white"><p className="text-[11px] font-bold uppercase opacity-70">Money owed</p><p className="mt-2 text-[25px] font-extrabold">₦173,500</p><p className="mt-1 text-[11px] opacity-70">3 open balances</p></div><div className="rounded-2xl bg-[#70d7c0] p-4 text-[#272047]"><p className="text-[11px] font-bold uppercase opacity-70">Due today</p><p className="mt-2 text-[25px] font-extrabold">2</p><p className="mt-1 text-[11px] opacity-70">gentle follow-ups</p></div></div>
+          <div className="mt-3 rounded-2xl border border-[#eee9e3] p-3"><div className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#70d7c0] text-[11px] font-extrabold">AO</span><span className="flex-1"><b className="block text-[13px]">Amaka Okafor</b><span className="text-[11px] text-gray-500">45 days old · no reminder yet</span></span><b className="text-[13px]">₦127,000</b></div><div className="mt-3 flex items-center justify-between rounded-xl bg-[#d9f5ed] px-3 py-2 text-[12px] font-bold text-[#272047]"><span>Send a kind reminder</span><span>WhatsApp →</span></div></div>
         </div>
       </div>
       {/* marquee */}
@@ -212,8 +190,8 @@ function Stats() {
 function FeatureTabs() {
   const [tab, setTab] = useState<"record" | "scan" | "ask">("record");
   const content = {
-    record: { icon: "⚡", title: "Record in seconds", body: "Two big buttons: Money in, Money out. Friendly questions, not ledger codes. Works great one-handed at the shop.", points: ["What did you sell? → done", "Paid / Pending / Credit tracking", "Money you're owed at a glance"] },
-    scan: { icon: "📷", title: "Scan paper records", body: "Snap receipts or notebook pages. Ledgerly reads them into editable transactions — you always confirm first.", points: ["Camera + gallery upload", "Editable confirmation form", "Scan history with status"] },
+    record: { icon: "⚡", title: "Record in seconds", body: "Add a debtor with friendly questions, not ledger codes. Works great one-handed at the shop.", points: ["Name and what they want", "Paid / Credit / Interested tracking", "Money owed at a glance"] },
+    scan: { icon: "📷", title: "Keep records tidy", body: "See everyone in one table, then open a full detail view whenever you need context.", points: ["Search by debtor", "View complete history", "Quick WhatsApp follow-up"] },
     ask: { icon: "✨", title: "Ask about your business", body: "Chat with your own data. Real figures calculated from your records, explained in plain language.", points: ["How much did I make?", "Where did I spend most?", "Compare this vs last month"] },
   }[tab];
   return (
@@ -246,7 +224,7 @@ function Steps() {
   const steps = [
     ["1", "Create account", "30 seconds. Just name, email, password."],
     ["2", "Add your business", "Shop name, type, phone — that's it."],
-    ["3", "Record first sale", "Money in → what did you sell? → saved 🎉"],
+    ["3", "Add your first debtor", "Name → status → reminder-ready details."],
   ];
   return (
     <section className="bg-white py-12">
@@ -267,9 +245,8 @@ function Steps() {
 }
 
 const AI_QA: Record<string, string> = {
-  "How much did I make this month?": "You made ₦165,000 this month from 3 sales. Your profit is ₦50,000 after ₦115,000 spending.",
-  "Where did I spend the most money?": "You spent the most on inventory — ₦80,000 this month. Next is salaries at ₦50,000.",
-  "How much am I owed?": "You're owed ₦100,000 — ₦25,000 pending from Chidi and ₦75,000 credit from Funmi.",
+  "How much am I owed?": "You are owed ₦173,500 across 3 open balances. Two follow-ups are due today.",
+  "Who needs a reminder?": "Amaka Okafor and Chinedu Eze have open balances and no reminder sent yet.",
 };
 
 function AiDemo() {
@@ -293,11 +270,11 @@ function AiDemo() {
   };
   return (
     <section id="ai" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-10">
-      <div className="grid gap-6 overflow-hidden rounded-3xl border border-[#167C5A]/15 bg-white p-6 shadow-sm md:grid-cols-2 md:p-10">
+      <div className="grid gap-6 overflow-hidden rounded-3xl border border-[#11b7ab]/20 bg-white p-6 shadow-sm md:grid-cols-2 md:p-10">
         <div>
-          <span className="rounded-full bg-[#DDF5EA] px-3 py-1 text-[12px] font-bold text-[#0F5132]">✨ ASK LEDGERLY — LIVE PREVIEW</span>
-          <h2 className="mt-3 text-[26px] font-extrabold leading-tight text-[#0F5132] md:text-[32px]">Ask in plain English. Get real numbers.</h2>
-          <p className="mt-2 text-[14px] text-gray-600">Tap a question to see how Ledgerly answers from actual records — never made-up figures.</p>
+          <span className="rounded-full bg-[#d9f5ed] px-3 py-1 text-[12px] font-bold text-[#272047]">✨ ASK CREDYT — LIVE PREVIEW</span>
+          <h2 className="mt-3 text-[26px] font-extrabold leading-tight text-[#29224e] md:text-[32px]">Ask in plain English. Get clear answers.</h2>
+          <p className="mt-2 text-[14px] text-gray-600">Tap a question to see how Credyt answers from actual debtor records — never made-up figures.</p>
           <div className="mt-4 flex flex-col gap-2">
             {Object.keys(AI_QA).map((q) => (
               <button key={q} onClick={() => ask(q)} className={`rounded-2xl border px-4 py-3 text-left text-[14px] font-semibold transition ${active === q ? "border-[#167C5A] bg-[#DDF5EA] text-[#0F5132]" : "border-gray-100 bg-[#F8FAF9] hover:border-[#167C5A]/40"}`}>
@@ -327,10 +304,9 @@ function AiDemo() {
 function DemoStrip() {
   const txns = useMemo(
     () => [
-      { icon: "💰", d: "Ankara sales", t: "Today", a: "₦45,000", in: true },
-      { icon: "🧾", d: "Transportation", t: "Today", a: "₦15,000", in: false },
-      { icon: "💰", d: "Catering order", t: "Yesterday", a: "₦120,000", in: true },
-      { icon: "🧾", d: "Staff salary", t: "Yesterday", a: "₦50,000", in: false },
+      { icon: "AO", d: "Amaka Okafor", t: "45 days old · no reminder", a: "₦127,000", status: "Credit" },
+      { icon: "CE", d: "Chinedu Eze", t: "26 days old · no reminder", a: "₦28,000", status: "Credit" },
+      { icon: "BS", d: "Bola Stores", t: "Interested in Ankara", a: "—", status: "Interested" },
     ],
     []
   );
@@ -338,29 +314,22 @@ function DemoStrip() {
     <section id="demo" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-6">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="animate-float rounded-3xl border border-gray-100 bg-white p-5 shadow-lg">
-          <p className="text-[13px] font-bold text-gray-400">GOOD MORNING, ADA ☀️</p>
+          <p className="text-[13px] font-bold text-gray-400">GOOD MORNING, ADA</p>
           <div className="mt-2 grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-2xl bg-[#DDF5EA] p-3"><p className="text-[11px] font-bold text-[#0F5132]">Money In</p><p className="font-extrabold text-[#0F5132]">₦165k</p></div>
-            <div className="rounded-2xl bg-gray-50 p-3"><p className="text-[11px] font-bold text-gray-500">Money Out</p><p className="font-extrabold">₦115k</p></div>
-            <div className="rounded-2xl bg-[#0F5132] p-3 text-white"><p className="text-[11px] font-bold opacity-80">Profit</p><p className="font-extrabold">₦50k</p></div>
+            <div className="rounded-2xl bg-[#29224e] p-3 text-white"><p className="text-[11px] font-bold opacity-80">Money owed</p><p className="font-extrabold">₦173k</p></div>
+            <div className="rounded-2xl bg-[#70d7c0] p-3"><p className="text-[11px] font-bold text-[#272047]">Follow-ups</p><p className="font-extrabold text-[#272047]">2 due</p></div>
+            <div className="rounded-2xl bg-[#f69a72] p-3"><p className="text-[11px] font-bold text-[#272047]">Reminders</p><p className="font-extrabold text-[#272047]">0 sent</p></div>
           </div>
-          <div className="mt-3 flex h-24 items-end gap-1.5">
-            {[40, 70, 45, 90, 60, 100, 75].map((h, i) => (
-              <div key={i} className="flex flex-1 items-end justify-center gap-0.5">
-                <div className="w-2.5 rounded-t bg-[#167C5A]" style={{ height: `${h}%` }} />
-                <div className="w-2.5 rounded-t bg-red-200" style={{ height: `${Math.max(10, h - 30)}%` }} />
-              </div>
-            ))}
-          </div>
+          <div className="mt-3 rounded-2xl border border-[#eee9e3] p-3 text-[12px] text-gray-500">A clear little list of who needs a nudge, without the awkwardness.</div>
         </div>
         <div className="animate-float-delay rounded-3xl border border-gray-100 bg-white p-5 shadow-lg">
-          <p className="font-extrabold">Recent transactions</p>
+          <p className="font-extrabold">Largest balances</p>
           <div className="mt-2 flex flex-col gap-2">
             {txns.map((t) => (
               <div key={t.d} className="flex items-center gap-3 rounded-2xl bg-[#F8FAF9] p-3 transition hover:scale-[1.01]">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg">{t.icon}</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#70d7c0] text-[11px] font-extrabold text-[#272047]">{t.icon}</span>
                 <span className="flex-1"><span className="block text-[14px] font-bold">{t.d}</span><span className="text-[12px] text-gray-500">{t.t}</span></span>
-                <span className={`font-extrabold ${t.in ? "text-[#167C5A]" : ""}`}>{t.in ? "+" : "−"}{t.a}</span>
+                <span className="text-right"><span className="block font-extrabold">{t.a}</span><span className="text-[11px] text-[#0b938e]">{t.status}</span></span>
               </div>
             ))}
           </div>
@@ -430,8 +399,8 @@ export default function Home() {
       <section className="px-4 pb-10">
         <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-[#167C5A] p-8 text-center text-white md:p-12">
           <div className="animate-blob pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
-          <h2 className="text-[26px] font-extrabold md:text-[36px]">Start tonight. Know your profit tomorrow.</h2>
-          <p className="mx-auto mt-2 max-w-md text-white/85">Join small businesses swapping paper notebooks for Ledgerly.</p>
+          <h2 className="text-[26px] font-extrabold md:text-[36px]">Start tonight. Collect more calmly tomorrow.</h2>
+          <p className="mx-auto mt-2 max-w-md text-white/85">Join small businesses keeping their debtor records clear with Credyt.</p>
           <div className="mx-auto mt-5 flex max-w-sm flex-col gap-2 sm:flex-row">
             <Link href={user ? "/dashboard" : "/signup"} className="flex-1 rounded-2xl bg-white px-6 py-3.5 text-center font-extrabold text-[#0F5132]">
               {user ? "Open dashboard →" : "Get started free →"}

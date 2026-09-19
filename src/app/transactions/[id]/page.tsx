@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card, Input, Select, Textarea } from "@/components/ui";
 import { useStore } from "@/lib/store";
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/constants";
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, type Transaction } from "@/lib/constants";
 import { formatDate, formatNaira } from "@/lib/utils";
 
 function DetailInner() {
@@ -16,12 +16,12 @@ function DetailInner() {
   const txn = transactions.find((t) => t.id === params.id);
   const [editing, setEditing] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
-  const [form, setForm] = useState({ description: "", amount: "", category: "", notes: "" });
+  const [form, setForm] = useState({ description: "", amount: "", category: "", notes: "", phone: "", dueDate: "" });
 
   // ?edit=1 opens straight into edit mode (from dashboard table)
   useEffect(() => {
     if (txn && search.get("edit") === "1") {
-      setForm({ description: txn.description, amount: String(txn.amount), category: txn.category, notes: txn.notes ?? "" });
+      setForm({ description: txn.description, amount: String(txn.amount), category: txn.category, notes: txn.notes ?? "", phone: txn.customer_phone ?? "", dueDate: (txn.due_date || "").slice(0, 10) });
       setEditing(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -31,13 +31,13 @@ function DetailInner() {
     return (
       <div className="py-10 text-center">
         <p className="font-bold">Transaction not found.</p>
-        <Link href="/transactions" className="mt-2 inline-block font-bold text-[#167C5A]">Back to records</Link>
+        <Link href="/transactions" className="mt-2 inline-block font-bold text-[#0b938e]">Back to records</Link>
       </div>
     );
   }
 
   const startEdit = () => {
-    setForm({ description: txn.description, amount: String(txn.amount), category: txn.category, notes: txn.notes ?? "" });
+    setForm({ description: txn.description, amount: String(txn.amount), category: txn.category, notes: txn.notes ?? "", phone: txn.customer_phone ?? "", dueDate: (txn.due_date || "").slice(0, 10) });
     setEditing(true);
   };
 
@@ -47,7 +47,9 @@ function DetailInner() {
       amount: Number(form.amount) || txn.amount,
       category: form.category,
       notes: form.notes,
-    });
+      customer_phone: form.phone.replace(/[\s-]/g, "") || null,
+      due_date: form.dueDate || null,
+    } as Partial<Transaction>);
     setEditing(false);
   };
 
@@ -60,24 +62,26 @@ function DetailInner() {
 
   return (
     <div className="py-4 animate-fade-up">
-      <Link href="/transactions" className="text-[14px] font-bold text-[#167C5A]">← All records</Link>
+      <Link href="/transactions" className="text-[14px] font-bold text-[#0b938e]">← All records</Link>
 
       {!editing && (
         <Card className="mt-3">
           <div className="flex items-center justify-between">
-            <Badge tone={txn.type === "income" ? "green" : "red"}>{txn.type === "income" ? "Money in" : "Money out"}</Badge>
-            <Badge tone={txn.payment_status === "paid" ? "green" : txn.payment_status === "pending" ? "amber" : "red"}>{txn.payment_status}</Badge>
+            <Badge tone="green">Debtor record</Badge>
+            <Badge tone={txn.payment_status === "paid" ? "green" : txn.payment_status === "interested" ? "amber" : "red"}>{txn.payment_status === "pending" ? "credit" : txn.payment_status}</Badge>
           </div>
           <h1 className="mt-2 text-[22px] font-extrabold">{txn.description}</h1>
-          <p className={`text-[28px] font-extrabold ${txn.type === "income" ? "text-[#167C5A]" : "text-red-600"}`}>
-            {txn.type === "income" ? "+" : "−"}{formatNaira(txn.amount)}
+          <p className="text-[28px] font-extrabold text-[#272047]">
+            {formatNaira(txn.amount)}
           </p>
           <dl className="mt-4 space-y-2.5 text-[14px]">
             {[
               ["Date", formatDate(txn.transaction_date)],
               ["Category", txn.category],
               ["Payment method", txn.payment_method ?? "—"],
-              [(txn.type === "income" ? "Customer" : "Vendor"), txn.customer_or_vendor ?? "—"],
+              ["Debtor", txn.customer_or_vendor ?? "—"],
+              ...(txn.customer_phone ? [["WhatsApp / phone", txn.customer_phone] as [string, string]] : []),
+              ...(txn.due_date ? [["Promised to pay", formatDate(txn.due_date)] as [string, string]] : []),
               ["Notes", txn.notes || "—"],
               ["Source", txn.source === "ocr" ? "Scanned 📷" : "Added by hand ✍️"],
             ].map(([k, v]) => (
@@ -98,7 +102,7 @@ function DetailInner() {
         <Card className="mt-3">
           <h2 className="text-[18px] font-extrabold">Edit transaction ✏️</h2>
           <p className="text-[13px] text-gray-500">
-            {txn.type === "income" ? "Money in" : "Money out"} · {formatNaira(txn.amount)}
+            Debtor record · {formatNaira(txn.amount)}
           </p>
           <div className="mt-3 flex flex-col gap-3">
             <Input label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
@@ -106,6 +110,12 @@ function DetailInner() {
             <Select label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
               {cats.map((c) => <option key={c} value={c}>{c}</option>)}
             </Select>
+            {txn.type === "income" && (
+              <Input label="Customer WhatsApp / phone" inputMode="tel" placeholder="e.g. 0803 123 4567" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            )}
+            {txn.type === "income" && txn.payment_status !== "paid" && (
+              <Input label="Promised payment date" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+            )}
             <Textarea label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             <div className="grid grid-cols-2 gap-2">
               <Button variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>

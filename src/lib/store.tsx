@@ -181,6 +181,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           payment_status: t.payment_status,
           payment_method: t.payment_method ?? null,
           customer_or_vendor: t.customer_or_vendor ?? null,
+          customer_phone: t.customer_phone ?? null,
+          due_date: t.due_date ?? null,
           notes: t.notes ?? null,
           source: t.source,
         })

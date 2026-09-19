@@ -43,8 +43,8 @@ export const INCOME_CATEGORIES = [
 
 export const PAYMENT_STATUSES = [
   { value: "paid", label: "Paid" },
-  { value: "pending", label: "Pending" },
   { value: "credit", label: "Credit" },
+  { value: "interested", label: "Interested" },
 ] as const;
 
 export const PAYMENT_METHODS = [
@@ -56,7 +56,7 @@ export const PAYMENT_METHODS = [
 ] as const;
 
 export type TransactionType = "income" | "expense";
-export type PaymentStatus = "paid" | "pending" | "credit";
+export type PaymentStatus = "paid" | "credit" | "interested" | "pending";
 export type TransactionSource = "manual" | "ocr";
 export type ScanStatus = "processing" | "completed" | "needs_review" | "failed";
 
@@ -82,6 +82,8 @@ export interface Transaction {
   payment_status: PaymentStatus;
   payment_method?: string;
   customer_or_vendor?: string;
+  customer_phone?: string; // WhatsApp/phone number for wa.me links (optional)
+  due_date?: string | null; // promised payment date for credit income (ISO, optional)
   notes?: string;
   source: TransactionSource;
   created_at: string;
@@ -103,4 +105,5 @@ export const SUGGESTED_QUESTIONS = [
   "How much am I owed?",
   "What did I sell the most this month?",
   "Compare my income this month with last month.",
+  "Record ₦25,000 Ankara sales",
 ];

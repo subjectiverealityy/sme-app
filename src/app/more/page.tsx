@@ -5,6 +5,7 @@ import { Card } from "@/components/ui";
 
 export default function MorePage() {
   const links = [
+    ["👥", "People", "Who owes & follow-ups", "/people"],
     ["📊", "Reports", "See summaries", "/reports"],
     ["📤", "Export", "CSV & PDF", "/export"],
     ["🏪", "Business", "Your profile", "/business"],

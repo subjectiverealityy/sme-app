@@ -9,7 +9,11 @@ import type { Transaction } from "@/lib/constants";
 import { formatDate, formatNaira } from "@/lib/utils";
 
 function statusTone(s: string): "green" | "amber" | "red" {
-  return s === "paid" ? "green" : s === "pending" ? "amber" : "red";
+  return s === "paid" ? "green" : s === "interested" ? "amber" : "red";
+}
+
+function displayStatus(status: string) {
+  return status === "pending" ? "credit" : status;
 }
 
 /** Shared transaction table — same on dashboard and Records page. */
@@ -48,8 +52,8 @@ export function TxnTable({ transactions }: { transactions: Transaction[] }) {
                 <tr key={t.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60">
                   <td className="px-4 py-3">
                     <span className="flex items-center gap-2.5">
-                      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${t.type === "income" ? "bg-[#DDF5EA]" : "bg-red-50"}`}>
-                        {t.type === "income" ? "💰" : "🧾"}
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d9f5ed] text-[#272047]">
+                        ◌
                       </span>
                       <span className="min-w-0">
                         <span className="block truncate font-bold">{t.description}</span>
@@ -59,10 +63,10 @@ export function TxnTable({ transactions }: { transactions: Transaction[] }) {
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-gray-600">{formatDate(t.transaction_date)}</td>
                   <td className="whitespace-nowrap px-4 py-3">
-                    <Badge tone={statusTone(t.payment_status)}>{t.payment_status}</Badge>
+                    <Badge tone={statusTone(t.payment_status)}>{displayStatus(t.payment_status)}</Badge>
                   </td>
-                  <td className={`whitespace-nowrap px-4 py-3 text-right font-extrabold ${t.type === "income" ? "text-[#167C5A]" : "text-red-600"}`}>
-                    {t.type === "income" ? "+" : "−"}{formatNaira(t.amount)}
+                  <td className="whitespace-nowrap px-4 py-3 text-right font-extrabold text-[#272047]">
+                    {formatNaira(t.amount)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
                     <span className="flex justify-end gap-1">
@@ -70,7 +74,7 @@ export function TxnTable({ transactions }: { transactions: Transaction[] }) {
                         href={`/transactions/${t.id}`}
                         title="View"
                         aria-label={`View ${t.description}`}
-                        className="rounded-lg p-2 text-gray-500 hover:bg-[#DDF5EA] hover:text-[#0F5132]"
+                        className="rounded-lg p-2 text-gray-500 hover:bg-[#d9f5ed] hover:text-[#272047]"
                       >
                         <Eye size={17} />
                       </Link>
@@ -78,7 +82,7 @@ export function TxnTable({ transactions }: { transactions: Transaction[] }) {
                         href={`/transactions/${t.id}?edit=1`}
                         title="Edit"
                         aria-label={`Edit ${t.description}`}
-                        className="rounded-lg p-2 text-gray-500 hover:bg-[#DDF5EA] hover:text-[#0F5132]"
+                        className="rounded-lg p-2 text-gray-500 hover:bg-[#d9f5ed] hover:text-[#272047]"
                       >
                         <Pencil size={17} />
                       </Link>

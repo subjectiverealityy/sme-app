@@ -35,6 +35,8 @@ create table if not exists public.transactions (
   payment_status text not null default 'paid' check (payment_status in ('paid','pending','credit')),
   payment_method text,
   customer_or_vendor text,
+  customer_phone text,
+  due_date date,
   notes text,
   source text not null default 'manual' check (source in ('manual','ocr')),
   created_at timestamptz default now(),

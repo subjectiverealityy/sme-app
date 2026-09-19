@@ -6,17 +6,29 @@ import { Button, Card } from "@/components/ui";
 import { SUGGESTED_QUESTIONS } from "@/lib/constants";
 import { useStore } from "@/lib/store";
 import { useAiChats, type ChatMsg } from "@/lib/aiChats";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatNaira } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
+interface PendingDraft {
+  sessionId: string;
+  type: "income" | "expense";
+  description: string;
+  amount: number;
+  category: string;
+  payment_status: "paid" | "pending" | "credit";
+  customer_or_vendor?: string;
+}
+
 export default function AskPage() {
-  const { user, business, transactions } = useStore();
+  const { user, business, transactions, addTransaction } = useStore();
   const ownerKey = business?.id ?? user?.id ?? "guest";
   const { sessions, loaded, newSession, updateSession, deleteSession } = useAiChats(ownerKey, business?.id ?? null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  const [pending, setPending] = useState<PendingDraft | null>(null);
+  const [saving, setSaving] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const active = sessions.find((s) => s.id === activeId) ?? null;
@@ -52,6 +64,7 @@ export default function AskPage() {
     const question = (q ?? input).trim();
     if (!question || loading) return;
     setInput("");
+    setPending(null);
     // ensure a session exists
     let sid = activeId;
     let base: ChatMsg[] = messages;
@@ -76,10 +89,47 @@ export default function AskPage() {
         messages: [...withUser, { role: "ai", text: j.answer ?? "Sorry, I could not answer that." }],
         title,
       });
+      if (j.action?.kind === "record-transaction" && j.action.draft) {
+        const d = j.action.draft;
+        setPending({
+          sessionId: sid,
+          type: d.type === "expense" ? "expense" : "income",
+          description: String(d.description || "Sale").slice(0, 80),
+          amount: Math.round(Number(d.amount) || 0),
+          category: String(d.category || (d.type === "expense" ? "Other" : "Sales")),
+          payment_status: ["paid", "pending", "credit"].includes(d.payment_status) ? d.payment_status : "paid",
+          customer_or_vendor: d.customer_or_vendor ? String(d.customer_or_vendor) : undefined,
+        });
+      }
     } catch {
       updateSession(sid, { messages: [...withUser, { role: "ai", text: "Network error. Please try again." }], title });
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function savePending() {
+    if (!pending || saving) return;
+    if (!pending.description.trim() || !(pending.amount > 0)) return;
+    setSaving(true);
+    try {
+      const txn = await addTransaction({
+        type: pending.type,
+        description: pending.description.trim(),
+        amount: Math.round(pending.amount),
+        category: pending.category,
+        transaction_date: new Date().toISOString(),
+        payment_status: pending.payment_status,
+        customer_or_vendor: pending.customer_or_vendor || undefined,
+        source: "manual",
+      });
+      const sid = pending.sessionId;
+      const cur = sessions.find((s) => s.id === sid);
+      const msgs = [...(cur?.messages ?? []), { role: "ai", text: `Saved ✓ ${formatNaira(txn.amount)} ${txn.type} (${txn.description}). See it on your dashboard.` } as ChatMsg];
+      updateSession(sid, { messages: msgs, title: cur?.title || "Chat" });
+      setPending(null);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -198,6 +248,52 @@ export default function AskPage() {
                 <span className="typing-dot inline-block h-2 w-2 rounded-full bg-[#167C5A]" />
                 <span className="typing-dot inline-block h-2 w-2 rounded-full bg-[#167C5A]" />
                 <span className="typing-dot inline-block h-2 w-2 rounded-full bg-[#167C5A]" />
+              </div>
+            )}
+            {pending && pending.sessionId === active?.id && (
+              <div className="self-start w-full max-w-[95%] rounded-2xl border border-[#167C5A]/30 bg-[#DDF5EA]/40 p-3.5 animate-fade-up">
+                <p className="text-[13px] font-bold uppercase tracking-wide text-[#0F5132]">Save this transaction?</p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <label className="col-span-2 block">
+                    <span className="text-[12px] font-semibold text-gray-500">What</span>
+                    <input
+                      value={pending.description}
+                      onChange={(e) => setPending({ ...pending, description: e.target.value })}
+                      className="mt-0.5 min-h-[44px] w-full rounded-xl border border-gray-200 bg-white px-3 text-[14px]"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-[12px] font-semibold text-gray-500">Amount (₦)</span>
+                    <input
+                      value={String(pending.amount)}
+                      inputMode="numeric"
+                      onChange={(e) => setPending({ ...pending, amount: Number(e.target.value.replace(/,/g, "")) || 0 })}
+                      className="mt-0.5 min-h-[44px] w-full rounded-xl border border-gray-200 bg-white px-3 text-[14px]"
+                    />
+                  </label>
+                  <div className="text-[14px]">
+                    <span className="text-[12px] font-semibold text-gray-500">Details</span>
+                    <p className="mt-0.5 font-bold">
+                      {pending.type === "income" ? "💰 Money in" : "🧾 Money out"} · {pending.payment_status}
+                      {pending.customer_or_vendor ? ` · ${pending.customer_or_vendor}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-2.5 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setPending(null)}
+                    className="min-h-[44px] rounded-xl border border-gray-200 bg-white px-4 text-[14px] font-bold text-gray-600"
+                  >
+                    Discard
+                  </button>
+                  <button
+                    onClick={savePending}
+                    disabled={saving}
+                    className="min-h-[44px] rounded-xl bg-[#167C5A] px-4 text-[14px] font-bold text-white disabled:opacity-60"
+                  >
+                    {saving ? "Saving…" : "Save ✓"}
+                  </button>
+                </div>
               </div>
             )}
             <div ref={bottomRef} />

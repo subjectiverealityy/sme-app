@@ -24,15 +24,13 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const base64 = Buffer.from(bytes).toString("base64");
-    const { GoogleGenerativeAI } = await import("@google/generative-ai");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || "gemini-2.0-flash" });
+    const { generateWithFallback } = await import("@/lib/gemini");
     const prompt = `Read this receipt or handwritten business record photo. Extract ONE transaction as JSON with keys: type ("income"|"expense"), description, amount (number, Naira, no commas), date (YYYY-MM-DD), category (one of: Inventory / Stock, Transportation, Salaries, Rent, Utilities, Marketing, Equipment, Food, Packaging, Internet / Data, Taxes, Sales, Services, Other), payment_status ("paid"|"pending"|"credit"), payment_method ("Cash"|"Bank Transfer"|"POS"|"Card"|"Other"). If unsure, leave empty string and let user fill. Return ONLY JSON.`;
-    const result = await model.generateContent([
+    const { text: raw } = await generateWithFallback([
       { text: prompt },
       { inlineData: { data: base64, mimeType: file.type || "image/jpeg" } },
     ]);
-    let text = result.response.text().trim().replace(/```json|```/g, "");
+    let text = raw.trim().replace(/```json|```/g, "");
     let extracted;
     try {
       extracted = JSON.parse(text);

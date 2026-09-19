@@ -1,15 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { Menu, Plus, ScanLine, Sparkles, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { ArrowUpRight, Bell, CalendarDays, Check, ChevronRight, CircleDollarSign, Menu, MessageCircle, ShieldCheck } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { Card, EmptyState, Skeleton } from "@/components/ui";
-import { TxnTable } from "@/components/TxnTable";
-import { AddFab } from "@/components/AddFab";
+import { EmptyState, Skeleton } from "@/components/ui";
+import { getCustomers, getPeopleStats, followUpLabel, initials, type CustomerSummary } from "@/lib/customers";
 import { useSidebar } from "@/components/Nav";
-import { filterByPreset, summarize, dailySeries } from "@/lib/finance";
-import { formatDate, formatNaira, greetingForHour } from "@/lib/utils";
+import { formatNaira, greetingForHour } from "@/lib/utils";
 
 function PageHeader({ name, businessName }: { name: string; businessName?: string }) {
   const { open, setOpen } = useSidebar();
@@ -25,48 +23,31 @@ function PageHeader({ name, businessName }: { name: string; businessName?: strin
           <Menu size={20} />
         </button>
       )}
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#167C5A] text-lg font-extrabold text-white">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#70D7C0] text-[15px] font-extrabold text-[#272047]">
         {initial}
       </div>
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-[20px] font-extrabold leading-tight md:text-[24px]">
-          {greetingForHour()}, {name} 👋
+        <h1 className="truncate text-[22px] font-extrabold leading-tight text-[#272047] md:text-[28px]">
+          {greetingForHour()}, {name}.
         </h1>
-        {businessName && (
-          <span className="mt-0.5 inline-block max-w-full truncate rounded-full bg-[#DDF5EA] px-2.5 py-0.5 text-[12px] font-bold text-[#0F5132]">
-            {businessName}
-          </span>
-        )}
+        <p className="mt-1 text-[12px] text-[#756f84]">A clear little list of who needs a nudge, without the awkwardness.</p>
       </div>
-      <Link
-        href="/transactions/new?type=income"
-        className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#167C5A] px-4 py-2.5 text-[14px] font-bold text-white shadow-sm transition hover:bg-[#0F5132]"
-      >
-        <Plus size={17} /> <span className="hidden sm:inline">Add</span>
-      </Link>
+      <div className="hidden items-center gap-2 text-[12px] text-[#756f84] sm:flex"><span>{businessName}</span><span className="text-[#d4cfd5]">/</span><span>Today</span></div>
     </div>
   );
 }
 
-const QUICK_ACTIONS = [
-  { href: "/transactions/new?type=income", icon: "💰", label: "Record sale", sub: "Money in", bg: "bg-[#DDF5EA]" },
-  { href: "/transactions/new?type=expense", icon: "🧾", label: "Add expense", sub: "Money out", bg: "bg-red-50" },
-  { href: "/scan", icon: "📷", label: "Scan record", sub: "Digitize paper", bg: "bg-amber-50" },
-  { href: "/ask", icon: "✨", label: "Ask AI", sub: "Insights", bg: "bg-violet-50" },
-];
+function BalanceRow({ customer }: { customer: CustomerSummary }) {
+  return <Link href={`/people/${encodeURIComponent(customer.name)}`} className="group flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-[#faf7f2]"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#70D7C0] text-[10px] font-extrabold text-[#272047]">{initials(customer.name)}</span><span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-bold text-[#272047]">{customer.name}</span><span className="block text-[10px] text-[#8e8994]">{followUpLabel(customer)}</span></span><span className="text-right"><span className="block text-[12px] font-extrabold text-[#272047]">{formatNaira(customer.outstanding)}</span><ArrowUpRight size={12} className="ml-auto text-[#f28e68] transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /></span></Link>;
+}
 
 export default function DashboardPage() {
   const { user, business, transactions, loading } = useStore();
-  const [range, setRange] = useState<"week" | "month" | "year">("month");
-
-  const filtered = useMemo(() => filterByPreset(transactions, range), [transactions, range]);
-  const summary = useMemo(() => summarize(filtered), [filtered]);
-  const series = useMemo(() => dailySeries(filtered, range === "week" ? 7 : range === "month" ? 14 : 12), [filtered, range]);
-  const recent = useMemo(() => [...transactions].sort((a, b) => +new Date(b.transaction_date) - +new Date(a.transaction_date)).slice(0, 5), [transactions]);
-
-  const maxVal = Math.max(1, ...series.flatMap((s) => [s.income, s.expense]));
   const firstName = (user?.name || "there").split(" ")[0];
-  const isProfit = summary.profit >= 0;
+  const customers = useMemo(() => getCustomers(transactions), [transactions]);
+  const peopleStats = useMemo(() => getPeopleStats(customers), [customers]);
+  const followUps = useMemo(() => customers.filter((c) => c.followUp === "overdue" || c.followUp === "due-today").slice(0, 3), [customers]);
+  const largestBalances = useMemo(() => customers.filter((c) => c.outstanding > 0).slice(0, 3), [customers]);
 
   if (loading) {
     return (
@@ -95,129 +76,22 @@ export default function DashboardPage() {
     return (
       <div className="py-4 animate-fade-up">
         <PageHeader name={firstName} businessName={business.name} />
-        {/* Hero empty state */}
-        <div className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F5132] to-[#167C5A] p-6 text-center text-white md:p-8">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-3xl">📒</div>
-          <h2 className="mt-3 text-[20px] font-extrabold md:text-[24px]">Your business story starts here.</h2>
-          <p className="mx-auto mt-1 max-w-[300px] text-[14px] text-white/80">
-            Record your first sale or expense and watch your profit appear.
-          </p>
-          <Link
-            href="/first-transaction"
-            className="mx-auto mt-4 block w-full max-w-[300px] rounded-2xl bg-white py-3.5 font-extrabold text-[#0F5132] transition hover:scale-[1.02]"
-          >
-            Add your first transaction
-          </Link>
-        </div>
-
-        {/* Quick actions */}
-        <h2 className="mt-5 text-[15px] font-extrabold text-gray-500">START WITH ONE TAP</h2>
-        <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-4">
-          {QUICK_ACTIONS.map((a) => (
-            <Link key={a.label} href={a.href}>
-              <Card className="flex items-center gap-3 !p-3.5 transition hover:-translate-y-0.5 hover:shadow-md">
-                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${a.bg}`}>{a.icon}</span>
-                <span>
-                  <span className="block text-[14px] font-bold leading-tight">{a.label}</span>
-                  <span className="block text-[12px] text-gray-500">{a.sub}</span>
-                </span>
-              </Card>
-            </Link>
-          ))}
-        </div>
-
-        <div className="mt-3 rounded-2xl bg-[#DDF5EA] px-4 py-3 text-[13px] text-[#0F5132]">
-          💡 <b>Tip:</b> most owners start by recording today&apos;s sales — it takes about 30 seconds.
-        </div>
+        <EmptyDebtorState />
       </div>
     );
   }
 
   return (
-    <div className="py-4 animate-fade-up">
+    <div className="py-4 text-[#272047] animate-fade-up">
       <PageHeader name={firstName} businessName={business.name} />
-
-      {/* Summary cards */}
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        <Card className="border border-[#167C5A]/15 bg-[#DDF5EA] !p-3 md:!p-4">
-          <p className="flex items-center gap-1 text-[12px] font-bold text-[#0F5132]"><TrendingUp size={13} /> Money In</p>
-          <p className="mt-1 text-[17px] font-extrabold text-[#0F5132] md:text-[22px]">{formatNaira(summary.moneyIn)}</p>
-          <p className="text-[11px] text-[#0F5132]/60">{summary.countIn} sale{summary.countIn === 1 ? "" : "s"}</p>
-        </Card>
-        <Card className="!p-3 md:!p-4">
-          <p className="flex items-center gap-1 text-[12px] font-bold text-gray-500"><TrendingDown size={13} /> Money Out</p>
-          <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(summary.moneyOut)}</p>
-          <p className="text-[11px] text-gray-400">{summary.countOut} expense{summary.countOut === 1 ? "" : "s"}</p>
-        </Card>
-        <Card className={`!p-3 md:!p-4 ${isProfit ? "bg-[#0F5132] text-white" : "bg-red-600 text-white"}`}>
-          <p className="flex items-center gap-1 text-[12px] font-bold opacity-80"><Wallet size={13} /> {isProfit ? "Profit" : "Loss"}</p>
-          <p className="mt-1 text-[17px] font-extrabold md:text-[22px]">{formatNaira(Math.abs(summary.profit))}</p>
-          <p className="text-[11px] opacity-70">{isProfit ? "🎉 you're growing" : "spending passed income"}</p>
-        </Card>
-      </div>
-
-      {summary.owedToYou > 0 && (
-        <Link href="/transactions">
-          <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-[14px] transition hover:shadow-sm">
-            💛 <b>Money you&apos;re owed:</b> {formatNaira(summary.owedToYou)} <span className="font-bold text-[#167C5A]">→ follow up</span>
-          </div>
-        </Link>
-      )}
-
-      {/* Quick actions */}
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {[
-          { href: "/transactions/new?type=income", icon: <Plus size={18} />, label: "Income" },
-          { href: "/transactions/new?type=expense", icon: <TrendingDown size={18} />, label: "Expense" },
-          { href: "/scan", icon: <ScanLine size={18} />, label: "Scan" },
-          { href: "/ask", icon: <Sparkles size={18} />, label: "Ask AI" },
-        ].map((a) => (
-          <Link key={a.label} href={a.href} className="flex flex-col items-center gap-1 rounded-2xl bg-white py-3 text-[#0F5132] shadow-sm transition hover:bg-[#DDF5EA]">
-            {a.icon}
-            <span className="text-[12px] font-bold">{a.label}</span>
-          </Link>
-        ))}
-      </div>
-
-      <Card className="mt-3 md:mt-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-extrabold">Money in vs out</h2>
-          <div className="flex gap-1 rounded-full bg-gray-100 p-1 text-[12px] font-bold">
-            {(["week", "month", "year"] as const).map((r) => (
-              <button key={r} onClick={() => setRange(r)} className={`rounded-full px-3 py-1 ${range === r ? "bg-white shadow" : "text-gray-500"}`}>
-                {r === "week" ? "Week" : r === "month" ? "Month" : "Year"}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="mt-4">
-          <div className="flex h-40 items-end gap-1.5 md:h-52">
-            {series.map((s, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <div className="flex w-full items-end justify-center gap-0.5">
-                  <div className="w-2.5 rounded-t bg-[#167C5A] md:w-4" style={{ height: `${Math.max(3, (s.income / maxVal) * 160)}px` }} title={`In ${s.income}`} />
-                  <div className="w-2.5 rounded-t bg-red-300 md:w-4" style={{ height: `${Math.max(3, (s.expense / maxVal) * 160)}px` }} title={`Out ${s.expense}`} />
-                </div>
-                {(series.length <= 8 || i % 2 === 0) && <span className="text-[9px] text-gray-400 md:text-[11px]">{s.label.slice(0, 3)}</span>}
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 flex gap-4 text-[12px] text-gray-500">
-            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-[#167C5A]" />Money in</span>
-            <span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-red-300" />Money out</span>
-          </div>
-        </div>
-      </Card>
-
-      <div className="mt-4 flex items-center justify-between">
-        <h2 className="font-extrabold">Recent transactions</h2>
-        <Link href="/transactions" className="text-[13px] font-bold text-[#167C5A]">View all →</Link>
-      </div>
-      <div className="mt-2">
-        <TxnTable transactions={recent} />
-      </div>
-      <AddFab />
+      <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3"><MetricCard label="Money owed" value={formatNaira(peopleStats.totalOutstanding)} detail={`${peopleStats.owingCount} people with open balances`} tone="navy" icon={<CircleDollarSign size={16} />} /><MetricCard label="Follow-ups due" value={String(peopleStats.followUpsDue)} detail="Promises that need your attention" tone="mint" icon={<CalendarDays size={16} />} /><MetricCard label="Reminders" value="0" detail="Always reviewed by you" tone="coral" icon={<Bell size={16} />} /></div>
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-[1.25fr_0.95fr]"><section className="rounded-2xl border border-[#e9e3da] bg-white p-4 shadow-[0_1px_5px_rgba(39,32,71,0.04)]"><SectionHeading icon={<Bell size={15} />} title="Follow up today" subtitle="Promises that need your attention." href="/people" /><div className="mt-3 rounded-xl border border-[#eee9e3] p-3">{followUps.length > 0 ? followUps.map((customer) => <BalanceRow key={customer.key} customer={customer} />) : <CaughtUp />}</div></section><section className="rounded-2xl border border-[#e9e3da] bg-white p-4 shadow-[0_1px_5px_rgba(39,32,71,0.04)]"><SectionHeading icon={<ArrowUpRight size={15} />} title="Largest balances" subtitle="A quick place to start." href="/people" /><div className="mt-3 space-y-1">{largestBalances.length > 0 ? largestBalances.map((customer) => <BalanceRow key={customer.key} customer={customer} />) : <p className="px-2 py-4 text-[12px] text-[#8e8994]">No open balances yet.</p>}</div></section></div>
+      <Link href="/people" className="mt-4 flex items-center gap-3 rounded-2xl border border-[#e9e3da] bg-white px-4 py-4 shadow-[0_1px_5px_rgba(39,32,71,0.04)] transition hover:border-[#70d7c0]"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fce0d3] text-[#d96e4d]"><MessageCircle size={17} /></span><span className="min-w-0 flex-1"><b className="block text-[13px]">A calmer way to collect</b><span className="block text-[11px] text-[#8e8994]">See the full picture, choose a kind next step, and keep promises visible.</span></span><ChevronRight size={17} className="text-[#8e8994]" /></Link>
     </div>
   );
 }
+
+function MetricCard({ label, value, detail, tone, icon }: { label: string; value: string; detail: string; tone: "navy" | "mint" | "coral"; icon: React.ReactNode }) { const styles = { navy: "bg-[#29224e] text-white", mint: "bg-[#70d7c0] text-[#272047]", coral: "bg-[#f69a72] text-[#272047]" }; return <div className={`rounded-2xl p-4 ${styles[tone]}`}><div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.12em] opacity-75"><span>{label}</span>{icon}</div><p className="mt-3 text-[22px] font-extrabold tracking-tight">{value}</p><p className="mt-1 text-[10px] opacity-70">{detail}</p></div>; }
+function SectionHeading({ icon, title, subtitle, href }: { icon: React.ReactNode; title: string; subtitle: string; href: string }) { return <div className="flex items-start justify-between"><div><h2 className="flex items-center gap-2 text-[14px] font-extrabold">{title}<span className="text-[#8e8994]">{icon}</span></h2><p className="mt-1 text-[11px] text-[#8e8994]">{subtitle}</p></div><Link href={href} aria-label={`View ${title}`} className="text-[#8e8994] transition hover:text-[#272047]"><ChevronRight size={16} /></Link></div>; }
+function CaughtUp() { return <div className="flex min-h-[142px] flex-col items-center justify-center text-center"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#70d7c0] text-[#272047]"><Check size={17} /></span><p className="mt-3 text-[12px] font-extrabold">You are all caught up</p><p className="mt-1 max-w-[220px] text-[11px] leading-5 text-[#8e8994]">New promises will appear here on the day they are due.</p></div>; }
+function EmptyDebtorState() { return <div className="mt-6 rounded-2xl border border-[#e9e3da] bg-white p-8 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#70d7c0] text-[#272047]"><ShieldCheck size={23} /></div><h2 className="mt-3 text-[18px] font-extrabold text-[#272047]">Your debtor list starts here.</h2><p className="mx-auto mt-1 max-w-[300px] text-[12px] leading-5 text-[#8e8994]">Record a sale with a customer and Ledgerly will keep every balance and promise visible.</p><Link href="/first-transaction" className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#29224e] px-5 py-3 text-[13px] font-bold text-white transition hover:bg-[#3b3267]">Add your first debtor <ChevronRight size={15} /></Link></div>; }
