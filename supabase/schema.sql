@@ -32,7 +32,7 @@ create table if not exists public.transactions (
   amount numeric(14,2) not null check (amount >= 0),
   category text not null default 'Other',
   transaction_date date not null default current_date,
-  payment_status text not null default 'paid' check (payment_status in ('paid','pending','credit')),
+  payment_status text not null default 'paid' check (payment_status in ('paid','pending','credit','interested')),
   payment_method text,
   customer_or_vendor text,
   customer_phone text,

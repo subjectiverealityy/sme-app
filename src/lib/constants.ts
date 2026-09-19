@@ -99,11 +99,10 @@ export interface ScannedRecord {
 }
 
 export const SUGGESTED_QUESTIONS = [
-  "How much did I make this month?",
-  "Where did I spend the most money?",
-  "What were my biggest expenses?",
   "How much am I owed?",
-  "What did I sell the most this month?",
-  "Compare my income this month with last month.",
-  "Record ₦25,000 Ankara sales",
+  "Who is on credit?",
+  "Who is interested but has not paid?",
+  "Who converted to a paid customer?",
+  "Who needs a follow-up?",
+  "Record Chidi as interested in Ankara for ₦25,000",
 ];

@@ -6,23 +6,26 @@ import { Eye, MessageCircle } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { Card, EmptyState, Input, Skeleton } from "@/components/ui";
 import { AddFab } from "@/components/AddFab";
-import { getCustomers, getPeopleStats, followUpLabel, initials, normalizeName, nudgeText, waLink } from "@/lib/customers";
+import { getCustomers, getPeopleStats, followUpLabel, initials, normalizeName, interestedText, nudgeText, waLink } from "@/lib/customers";
 import { formatDate, formatNaira } from "@/lib/utils";
 
-type Tab = "paid" | "credit" | "interested";
+type StatusFilter = "all" | "paid" | "credit" | "interested";
 
 export default function PeoplePage() {
   const { transactions, loading } = useStore();
   const [q, setQ] = useState("");
-  const [tab, setTab] = useState<Tab>("paid");
+  const [status, setStatus] = useState<StatusFilter>("all");
 
   const customers = useMemo(() => getCustomers(transactions), [transactions]);
   const stats = useMemo(() => getPeopleStats(customers), [customers]);
+  const categories = useMemo(() => ["all", ...Array.from(new Set(transactions.filter((t) => t.type === "income").map((t) => t.category)))], [transactions]);
+  const [category, setCategory] = useState("all");
 
   const filtered = customers.filter((c) => {
-    if (tab === "paid" && (c.totalPaid <= 0 || c.outstanding > 0 || c.interestedAmount > 0)) return false;
-    if (tab === "credit" && c.outstanding <= 0) return false;
-    if (tab === "interested" && c.interestedAmount <= 0) return false;
+    if (status === "paid" && (c.totalPaid <= 0 || c.outstanding > 0 || c.interestedAmount > 0)) return false;
+    if (status === "credit" && c.outstanding <= 0) return false;
+    if (status === "interested" && c.interestedAmount <= 0) return false;
+    if (category !== "all" && !c.txns.some((t) => t.category === category)) return false;
     if (q && !c.name.toLowerCase().includes(q.trim().toLowerCase())) return false;
     return true;
   });
@@ -37,7 +40,7 @@ export default function PeoplePage() {
     if (!customer.phone) return null;
     const message = customer.outstanding > 0
       ? nudgeText(customer.name, customer.outstanding, "my business")
-      : `Hello ${customer.name.split(" ")[0]} 👋, just checking in about ${customer.txns[0]?.description ?? "your request"}. Let me know if you would still like to go ahead. Thank you!`;
+      : interestedText(customer.name, customer.txns[0]?.description ?? "the item we discussed", "my business");
     return waLink(customer.phone, message);
   }
 
@@ -51,12 +54,6 @@ export default function PeoplePage() {
       </div>
     );
   }
-
-  const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: "paid", label: "Paid", count: stats.paidCount },
-    { id: "credit", label: "Credit", count: stats.creditCount },
-    { id: "interested", label: "Interested", count: stats.interestedCount },
-  ];
 
   return (
     <div className="py-4 animate-fade-up">
@@ -76,18 +73,16 @@ export default function PeoplePage() {
         <Input placeholder="Search customers…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
-      <div className="mt-2 flex gap-2">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex-1 rounded-xl px-3 py-2.5 text-[14px] font-bold transition ${
-              tab === t.id ? "bg-[#29224e] text-white shadow" : "bg-white text-gray-500"
-            }`}
-          >
-            {t.label} ({t.count})
-          </button>
-        ))}
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="min-h-[48px] rounded-xl border border-gray-200 bg-white px-4 py-3 text-[16px]">
+          {categories.map((value) => <option key={value} value={value}>{value === "all" ? "All categories" : value}</option>)}
+        </select>
+        <select value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)} className="min-h-[48px] rounded-xl border border-gray-200 bg-white px-4 py-3 text-[16px]">
+          <option value="all">All statuses ({customers.length})</option>
+          <option value="paid">Paid ({stats.paidCount})</option>
+          <option value="credit">Credit ({stats.creditCount})</option>
+          <option value="interested">Interested ({stats.interestedCount})</option>
+        </select>
       </div>
 
       {filtered.length === 0 ? (
@@ -96,7 +91,7 @@ export default function PeoplePage() {
             title={
               customers.length === 0
                 ? "No customers yet."
-                : tab === "paid" ? "No paid debtors yet." : tab === "credit" ? "Nobody is on credit." : "No interested customers yet."
+                : "No debtors match these filters."
             }
             body={
               customers.length === 0

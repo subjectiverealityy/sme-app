@@ -11,11 +11,11 @@ import { cn } from "@/lib/utils";
 
 interface PendingDraft {
   sessionId: string;
-  type: "income" | "expense";
+  type: "income";
   description: string;
   amount: number;
   category: string;
-  payment_status: "paid" | "pending" | "credit";
+  payment_status: "paid" | "credit" | "interested";
   customer_or_vendor?: string;
 }
 
@@ -29,6 +29,7 @@ export default function AskPage() {
   const [drawer, setDrawer] = useState(false);
   const [pending, setPending] = useState<PendingDraft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const active = sessions.find((s) => s.id === activeId) ?? null;
@@ -65,6 +66,7 @@ export default function AskPage() {
     if (!question || loading) return;
     setInput("");
     setPending(null);
+    setSaveError("");
     // ensure a session exists
     let sid = activeId;
     let base: ChatMsg[] = messages;
@@ -89,15 +91,15 @@ export default function AskPage() {
         messages: [...withUser, { role: "ai", text: j.answer ?? "Sorry, I could not answer that." }],
         title,
       });
-      if (j.action?.kind === "record-transaction" && j.action.draft) {
+      if (j.action?.kind === "record-debtor" && j.action.draft) {
         const d = j.action.draft;
         setPending({
           sessionId: sid,
-          type: d.type === "expense" ? "expense" : "income",
-          description: String(d.description || "Sale").slice(0, 80),
+          type: "income",
+          description: String(d.description || "Product or service").slice(0, 80),
           amount: Math.round(Number(d.amount) || 0),
-          category: String(d.category || (d.type === "expense" ? "Other" : "Sales")),
-          payment_status: ["paid", "pending", "credit"].includes(d.payment_status) ? d.payment_status : "paid",
+          category: "Sales",
+          payment_status: ["paid", "credit", "interested"].includes(d.payment_status) ? d.payment_status : "paid",
           customer_or_vendor: d.customer_or_vendor ? String(d.customer_or_vendor) : undefined,
         });
       }
@@ -112,6 +114,7 @@ export default function AskPage() {
     if (!pending || saving) return;
     if (!pending.description.trim() || !(pending.amount > 0)) return;
     setSaving(true);
+    setSaveError("");
     try {
       const txn = await addTransaction({
         type: pending.type,
@@ -125,9 +128,14 @@ export default function AskPage() {
       });
       const sid = pending.sessionId;
       const cur = sessions.find((s) => s.id === sid);
-      const msgs = [...(cur?.messages ?? []), { role: "ai", text: `Saved ✓ ${formatNaira(txn.amount)} ${txn.type} (${txn.description}). See it on your dashboard.` } as ChatMsg];
+      const msgs = [...(cur?.messages ?? []), { role: "ai", text: `Saved ✓ ${txn.customer_or_vendor || "Debtor"} as ${txn.payment_status}. See the record on your dashboard.` } as ChatMsg];
       updateSession(sid, { messages: msgs, title: cur?.title || "Chat" });
       setPending(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save this debtor.";
+      setSaveError(message.includes("payment_status") || message.includes("check constraint")
+        ? "Your Supabase database still uses the old status list. Apply supabase/migration_debtor_statuses.sql, then try again."
+        : message);
     } finally {
       setSaving(false);
     }
@@ -192,7 +200,7 @@ export default function AskPage() {
           <Menu size={19} />
         </button>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[22px] font-extrabold text-[#0F5132]">Ask Ledgerly ✨</h1>
+          <h1 className="truncate text-[22px] font-extrabold text-[#29224e]">Ask Credyt ✨</h1>
           <p className="truncate text-[13px] text-gray-500">
             {active ? active.title : "Ask questions about your business."}
           </p>
@@ -252,7 +260,7 @@ export default function AskPage() {
             )}
             {pending && pending.sessionId === active?.id && (
               <div className="self-start w-full max-w-[95%] rounded-2xl border border-[#167C5A]/30 bg-[#DDF5EA]/40 p-3.5 animate-fade-up">
-                <p className="text-[13px] font-bold uppercase tracking-wide text-[#0F5132]">Save this transaction?</p>
+                  <p className="text-[13px] font-bold uppercase tracking-wide text-[#29224e]">Save this debtor?</p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <label className="col-span-2 block">
                     <span className="text-[12px] font-semibold text-gray-500">What</span>
@@ -274,7 +282,7 @@ export default function AskPage() {
                   <div className="text-[14px]">
                     <span className="text-[12px] font-semibold text-gray-500">Details</span>
                     <p className="mt-0.5 font-bold">
-                      {pending.type === "income" ? "💰 Money in" : "🧾 Money out"} · {pending.payment_status}
+                      Debtor status: {pending.payment_status}
                       {pending.customer_or_vendor ? ` · ${pending.customer_or_vendor}` : ""}
                     </p>
                   </div>
@@ -294,6 +302,7 @@ export default function AskPage() {
                     {saving ? "Saving…" : "Save ✓"}
                   </button>
                 </div>
+                {saveError && <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-[12px] text-red-700">{saveError}</p>}
               </div>
             )}
             <div ref={bottomRef} />

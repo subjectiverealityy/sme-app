@@ -4,8 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  Receipt,
-  ScanLine,
   Sparkles,
   Menu,
   ChevronLeft,
@@ -21,8 +19,8 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 
 const items = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/transactions", label: "Records", icon: Receipt },
-  { href: "/scan", label: "Scan", icon: ScanLine, fab: true },
+  { href: "/people", label: "People", icon: Users },
+  { href: "/transactions/new", label: "Add debtor", icon: Home, fab: true },
   { href: "/ask", label: "Ask AI", icon: Sparkles },
   { href: "/more", label: "More", icon: Menu },
 ];
@@ -44,7 +42,7 @@ export function BottomNav() {
                     active ? "bg-[#29224e] text-white" : "bg-[#11b7ab] text-[#272047]"
                   )}
                 >
-                  <Icon size={22} />
+                  <Logo size={30} showWordmark={false} />
                 </span>
                 <span className={cn("mt-0.5 text-[11px] font-semibold", active ? "text-[#29224e]" : "text-gray-500")}>
                   {it.label}
@@ -99,7 +97,6 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
 const links = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/transactions", label: "Transactions", icon: Receipt },
   { href: "/people", label: "People", icon: Users },
   { href: "/ask", label: "Ask Credyt", icon: Sparkles },
   { href: "/reports", label: "Reports", icon: TrendingUp },

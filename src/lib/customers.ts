@@ -185,6 +185,12 @@ export function nudgeText(customerName: string, amount: number, businessName: st
   return `Hello ${first} 👋, this is ${businessName}. Hope you're well! Just a friendly reminder about your balance of ${amt}. Let me know when it's convenient to sort it out. Thank you! 🙏`;
 }
 
+/** Friendly follow-up for an interested contact who has not committed payment. */
+export function interestedText(customerName: string, item: string, businessName: string): string {
+  const first = customerName.trim().split(/\s+/)[0];
+  return `Hello ${first} 👋, this is ${businessName}. I wanted to check whether you're still interested in ${item || "the item we discussed"}. I'm happy to answer any questions or reserve it for you when you're ready. Thank you!`;
+}
+
 export function followUpLabel(c: CustomerSummary): string {
   if (c.outstanding <= 0) return "Cleared ✓";
   if (c.followUp === "overdue") return `${c.daysOverdue} day${c.daysOverdue === 1 ? "" : "s"} overdue`;
