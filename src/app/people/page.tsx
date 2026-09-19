@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Eye, MessageCircle, Pencil } from "lucide-react";
+import { CheckCircle2, Eye, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { Card, EmptyState, Input, Skeleton } from "@/components/ui";
 import { AddFab } from "@/components/AddFab";
@@ -12,7 +12,7 @@ import { formatDate, formatNaira } from "@/lib/utils";
 type StatusFilter = "all" | "paid" | "credit" | "interested";
 
 export default function PeoplePage() {
-  const { transactions, loading, updateTransaction } = useStore();
+  const { transactions, loading, updateTransaction, deleteTransaction } = useStore();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [paying, setPaying] = useState<string | null>(null);
@@ -53,6 +53,13 @@ export default function PeoplePage() {
       await Promise.all(creditRecords.map((t) => updateTransaction(t.id, { payment_status: "paid" })));
     } finally {
       setPaying(null);
+    }
+  }
+
+  async function deletePerson(customer: (typeof customers)[number]) {
+    if (!window.confirm(`Delete ${customer.name} and all of their records?`)) return;
+    for (const transaction of customer.txns) {
+      await deleteTransaction(transaction.id);
     }
   }
 
@@ -154,8 +161,9 @@ export default function PeoplePage() {
                       <td className="px-4 py-3"><span className="flex justify-end gap-1.5">
                         <Link href={`/people/${encodeURIComponent(normalizeName(c.name))}`} title="View details" aria-label={`View ${c.name}`} className="inline-flex items-center gap-1.5 rounded-lg p-2 text-gray-500 hover:bg-[#d9f5ed] hover:text-[#272047]"><Eye size={17} /><span className="hidden xl:inline text-[12px] font-bold">View</span></Link>
                         {c.txns[0] && <Link href={`/transactions/${c.txns[0].id}?edit=1`} title="Edit debtor record" aria-label={`Edit ${c.name}`} className="inline-flex items-center gap-1.5 rounded-lg p-2 text-gray-500 hover:bg-[#d9f5ed] hover:text-[#272047]"><Pencil size={17} /><span className="hidden xl:inline text-[12px] font-bold">Edit</span></Link>}
-                        {reminder ? <a href={reminder} target="_blank" rel="noopener noreferrer" title="Send WhatsApp reminder" aria-label={`Remind ${c.name} on WhatsApp`} className="inline-flex items-center gap-1.5 rounded-lg bg-[#d9f5ed] p-2 text-[#0b938e] hover:bg-[#bfeee2]"><MessageCircle size={17} /><span className="hidden xl:inline text-[12px] font-bold">Remind</span></a> : <span title="Add a phone number to remind" className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg bg-gray-100 p-2 text-gray-300"><MessageCircle size={17} /><span className="hidden xl:inline text-[12px] font-bold">Remind</span></span>}
+                        {status === "Paid" ? <span title="Paid contacts do not need reminders" className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg bg-gray-100 p-2 text-gray-300 blur-[1px]"><MessageCircle size={17} /><span className="hidden xl:inline text-[12px] font-bold">Remind</span></span> : reminder ? <a href={reminder} target="_blank" rel="noopener noreferrer" title="Send WhatsApp reminder" aria-label={`Remind ${c.name} on WhatsApp`} className="inline-flex items-center gap-1.5 rounded-lg bg-[#d9f5ed] p-2 text-[#0b938e] hover:bg-[#bfeee2]"><MessageCircle size={17} /><span className="hidden xl:inline text-[12px] font-bold">Remind</span></a> : <span title="Add a phone number to remind" className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg bg-gray-100 p-2 text-gray-300"><MessageCircle size={17} /><span className="hidden xl:inline text-[12px] font-bold">Remind</span></span>}
                         {status === "Credit" && <button onClick={() => markPaid(c)} disabled={paying === c.key} title="Mark all credit records as paid" aria-label={`Mark ${c.name} as paid`} className="inline-flex items-center gap-1.5 rounded-lg bg-[#29224e] p-2 text-white hover:bg-[#3b3267] disabled:opacity-50"><CheckCircle2 size={17} /><span className="hidden xl:inline text-[12px] font-bold">{paying === c.key ? "Saving" : "Paid"}</span></button>}
+                        <button onClick={() => deletePerson(c)} title="Delete person" aria-label={`Delete ${c.name}`} className="inline-flex items-center gap-1.5 rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"><Trash2 size={17} /><span className="hidden xl:inline text-[12px] font-bold">Delete</span></button>
                       </span></td>
                     </tr>
                   );

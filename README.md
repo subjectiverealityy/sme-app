@@ -65,7 +65,6 @@ Bottom nav (mobile): Home, Owed, Scan, Ask AI, More. Desktop: sidebar.
 - **Business**: `name`, `category`, `phone`, `location`, `description`
 
 ## Money
-
 Amounts stored as `numeric(14,2)`, displayed as ₦. 
 - Profit = paid income − expenses
 - Owed = pending/credit income (outstanding balances)
@@ -76,3 +75,7 @@ Amounts stored as `numeric(14,2)`, displayed as ₦.
 - `feat/onboarding` — onboarding flow improvements (to be merged)
 - `feat/OCR` — OCR/scan feature
 - `design-theme-update` — design system updates
+
+
+## Video Demo
+https://drive.google.com/file/d/1S2mor93730zNmFUVs9irT6sphgEGQ0HP/view?usp=sharing
